@@ -1,0 +1,47 @@
+@model SchoolManagement.ViewModels.GradeSubmissionViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Grade Submission";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <button onclick="history.back()" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></button>
+    <h4 class="mb-0"><i class="bi bi-patch-check me-2"></i>Grade Submission</h4>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-1"><i class="bi bi-person me-2"></i>@Model.StudentName</h6>
+            <small class="text-muted d-block mb-3">Submitted @Model.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+            <hr />
+            <h6 class="fw-semibold">Student's Answer:</h6>
+            <div class="bg-light p-3 rounded" style="white-space:pre-wrap">@Model.SubmissionContent</div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card p-4">
+            <h6 class="fw-semibold mb-3"><i class="bi bi-pencil-square me-2"></i>Give Grade</h6>
+            <form asp-action="Grade" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="SubmissionId" type="hidden" />
+                <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Grade" class="form-label fw-semibold">Grade (0–100)</label>
+                    <input asp-for="Grade" class="form-control" type="number" min="0" max="100" />
+                    <span asp-validation-for="Grade" class="text-danger small"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Feedback" class="form-label fw-semibold">Feedback <small class="text-muted">(optional)</small></label>
+                    <textarea asp-for="Feedback" class="form-control" rows="4" placeholder="Write feedback for the student..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-check-lg me-1"></i>Submit Grade
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

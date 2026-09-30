@@ -1,0 +1,51 @@
+@model SchoolManagement.ViewModels.CreateUserViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create User";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Admin/Users" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Create New User</h4>
+</div>
+
+<div class="card p-4" style="max-width:560px">
+    <form asp-action="CreateUser" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label fw-semibold"></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Username" class="form-label fw-semibold"></label>
+            <input asp-for="Username" class="form-control" />
+            <span asp-validation-for="Username" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label fw-semibold"></label>
+            <input asp-for="Email" class="form-control" type="email" />
+            <span asp-validation-for="Email" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Role" class="form-label fw-semibold"></label>
+            <select asp-for="Role" asp-items="Html.GetEnumSelectList<SchoolManagement.Models.UserRole>()" class="form-select"></select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label fw-semibold"></label>
+            <input asp-for="Password" class="form-control" type="password" />
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+            <input asp-for="ConfirmPassword" class="form-control" type="password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-check-lg me-1"></i>Create Account
+        </button>
+    </form>
+</div>

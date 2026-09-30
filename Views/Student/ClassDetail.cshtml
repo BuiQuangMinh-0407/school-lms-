@@ -1,0 +1,73 @@
+@model SchoolManagement.ViewModels.ClassDetailViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = Model.Class.Name;
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Student/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <div>
+        <h4 class="mb-0">@Model.Class.Name</h4>
+        <small class="text-muted">@Model.Class.Description</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Published Lessons -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-journal-richtext me-2"></i>Lessons
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var l in Model.Lessons)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">@l.Title</div>
+                            <small class="text-muted">Published @l.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                        </div>
+                        <a href="/Student/ViewLesson/@l.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-book me-1"></i>Read
+                        </a>
+                    </li>
+                }
+                @if (!Model.Lessons.Any())
+                {
+                    <li class="list-group-item text-muted">No lessons published yet.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Assignments -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-clipboard-check me-2"></i>Assignments
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var a in Model.Assignments)
+                {
+                    var isPastDue = a.DueDate < DateTime.UtcNow;
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">@a.Title</div>
+                            <small class="@(isPastDue ? "text-danger" : "text-muted")">
+                                Due @a.DueDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                @if (isPastDue) { <span>(overdue)</span> }
+                            </small>
+                        </div>
+                        <a href="/Student/ViewAssignment/@a.Id" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-upload me-1"></i>Submit
+                        </a>
+                    </li>
+                }
+                @if (!Model.Assignments.Any())
+                {
+                    <li class="list-group-item text-muted">No assignments yet.</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

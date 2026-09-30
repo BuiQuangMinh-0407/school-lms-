@@ -1,0 +1,31 @@
+@model SchoolManagement.ViewModels.CreateClassViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create Class";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Admin/Classes" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-collection me-2"></i>Create New Class</h4>
+</div>
+
+<div class="card p-4" style="max-width:560px">
+    <form asp-action="CreateClass" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label fw-semibold">Class Name</label>
+            <input asp-for="Name" class="form-control" placeholder="e.g. Mathematics 10A" />
+            <span asp-validation-for="Name" class="text-danger small"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="Description" class="form-label fw-semibold">Description <small class="text-muted">(optional)</small></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-plus-lg me-1"></i>Create Class
+        </button>
+    </form>
+</div>

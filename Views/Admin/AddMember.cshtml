@@ -1,0 +1,41 @@
+@model SchoolManagement.ViewModels.AddMemberViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Add " + Model.MemberType;
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Admin/ClassDetail/@Model.ClassId" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0">Add @Model.MemberType to <em>@Model.ClassName</em></h4>
+</div>
+
+<div class="card p-4" style="max-width:480px">
+    @if (!Model.AvailableUsers.Any())
+    {
+        <div class="alert alert-warning">
+            No available @Model.MemberType.ToLower()s to add. All @Model.MemberType.ToLower()s are already assigned.
+        </div>
+        <a href="/Admin/ClassDetail/@Model.ClassId" class="btn btn-secondary">Back</a>
+    }
+    else
+    {
+        var action = Model.MemberType == "Teacher" ? "AddTeacher" : "AddStudent";
+        <form method="post" asp-action="@action" asp-route-classId="@Model.ClassId">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Select @Model.MemberType</label>
+                <select name="selectedUserId" class="form-select">
+                    @foreach (var u in Model.AvailableUsers)
+                    {
+                        <option value="@u.Id">@u.FullName (@u.Username)</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-plus-lg me-1"></i>Add @Model.MemberType
+            </button>
+        </form>
+    }
+</div>

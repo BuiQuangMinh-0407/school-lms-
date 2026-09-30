@@ -1,0 +1,38 @@
+@model List<SchoolManagement.Models.Class>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Classes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-collection me-2"></i>Classes</h4>
+    <a href="/Admin/CreateClass" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Class</a>
+</div>
+
+<div class="row g-3">
+    @foreach (var cls in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@cls.Name</h5>
+                    <p class="card-text text-muted small">@(cls.Description ?? "No description")</p>
+                    <div class="d-flex gap-3 text-muted small mb-3">
+                        <span><i class="bi bi-person-workspace me-1"></i>@cls.ClassTeachers.Count teacher(s)</span>
+                        <span><i class="bi bi-people me-1"></i>@cls.ClassStudents.Count student(s)</span>
+                    </div>
+                    <a href="/Admin/ClassDetail/@cls.Id" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-eye me-1"></i>Manage Class
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="col-12">
+            <div class="alert alert-info">No classes yet. <a href="/Admin/CreateClass">Create the first class</a>.</div>
+        </div>
+    }
+</div>

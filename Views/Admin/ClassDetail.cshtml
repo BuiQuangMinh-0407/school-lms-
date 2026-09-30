@@ -1,0 +1,119 @@
+@model SchoolManagement.ViewModels.ClassDetailViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Class: " + Model.Class.Name;
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Admin/Classes" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <div>
+        <h4 class="mb-0">@Model.Class.Name</h4>
+        <small class="text-muted">@Model.Class.Description</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Teachers -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-workspace me-2"></i>Teachers</span>
+                <a href="/Admin/AddTeacher/@Model.Class.Id" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus"></i> Add
+                </a>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var t in Model.Teachers)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person me-2 text-primary"></i>@t.FullName</span>
+                        <form method="post" asp-action="RemoveTeacher" asp-route-classId="@Model.Class.Id" asp-route-teacherId="@t.Id">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Remove this teacher?')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </li>
+                }
+                @if (!Model.Teachers.Any())
+                {
+                    <li class="list-group-item text-muted">No teachers assigned.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Students -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people me-2"></i>Students</span>
+                <a href="/Admin/AddStudent/@Model.Class.Id" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-plus"></i> Enroll
+                </a>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var s in Model.Students)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person me-2 text-success"></i>@s.FullName</span>
+                        <form method="post" asp-action="RemoveStudent" asp-route-classId="@Model.Class.Id" asp-route-studentId="@s.Id">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Remove this student?')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </li>
+                }
+                @if (!Model.Students.Any())
+                {
+                    <li class="list-group-item text-muted">No students enrolled.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Lessons overview -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-journal-richtext me-2"></i>Lessons (@Model.Lessons.Count)</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var l in Model.Lessons)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@l.Title</span>
+                        <span class="badge @(l.IsPublished ? "bg-success" : "bg-secondary")">
+                            @(l.IsPublished ? "Published" : "Draft")
+                        </span>
+                    </li>
+                }
+                @if (!Model.Lessons.Any())
+                {
+                    <li class="list-group-item text-muted">No lessons yet.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Assignments overview -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clipboard-check me-2"></i>Assignments (@Model.Assignments.Count)</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var a in Model.Assignments)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@a.Title</span>
+                        <small class="text-muted">Due @a.DueDate.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                    </li>
+                }
+                @if (!Model.Assignments.Any())
+                {
+                    <li class="list-group-item text-muted">No assignments yet.</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

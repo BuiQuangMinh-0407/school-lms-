@@ -1,0 +1,93 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h4 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card border-primary p-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-people-fill fs-2 text-primary me-3"></i>
+                <div>
+                    <div class="fs-4 fw-bold">@ViewBag.TotalUsers</div>
+                    <div class="text-muted small">Total Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card border-success p-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-collection-fill fs-2 text-success me-3"></i>
+                <div>
+                    <div class="fs-4 fw-bold">@ViewBag.TotalClasses</div>
+                    <div class="text-muted small">Classes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card border-info p-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-person-workspace fs-2 text-info me-3"></i>
+                <div>
+                    <div class="fs-4 fw-bold">@ViewBag.TotalTeachers</div>
+                    <div class="text-muted small">Teachers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card border-warning p-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-person-fill fs-2 text-warning me-3"></i>
+                <div>
+                    <div class="fs-4 fw-bold">@ViewBag.TotalStudents</div>
+                    <div class="text-muted small">Students</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-semibold"><i class="bi bi-journal-text me-2"></i>Recent Activity Logs</div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>IP</th>
+                    <th>Result</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in (List<SchoolManagement.Models.ActivityLog>)ViewBag.RecentLogs)
+                {
+                    <tr>
+                        <td><small>@log.OccurredAt.ToLocalTime().ToString("dd/MM HH:mm:ss")</small></td>
+                        <td>@(log.Username ?? "-")</td>
+                        <td>@log.Action</td>
+                        <td><small class="text-muted">@(log.IpAddress ?? "-")</small></td>
+                        <td>
+                            @if (log.Success)
+                            {
+                                <span class="badge bg-success">OK</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Fail</span>
+                            }
+                        </td>
+                        <td><small class="text-muted">@log.Details</small></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

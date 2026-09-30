@@ -1,0 +1,41 @@
+@model List<SchoolManagement.Models.AssignmentSubmission>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "My Grades";
+}
+
+<h4 class="mb-4"><i class="bi bi-patch-check me-2"></i>My Grades</h4>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Class</th>
+                    <th>Assignment</th>
+                    <th>Grade</th>
+                    <th>Feedback</th>
+                    <th>Graded At</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sub in Model)
+                {
+                    var g = sub.Grade!.Value;
+                    var badgeClass = g >= 80 ? "bg-success" : g >= 60 ? "bg-warning text-dark" : "bg-danger";
+                    <tr>
+                        <td>@sub.Assignment.Class.Name</td>
+                        <td class="fw-semibold">@sub.Assignment.Title</td>
+                        <td><span class="badge @badgeClass fs-6">@g / 100</span></td>
+                        <td><small class="text-muted">@(sub.Feedback ?? "—")</small></td>
+                        <td><small>@sub.GradedAt?.ToLocalTime().ToString("dd/MM/yyyy")</small></td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No grades yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

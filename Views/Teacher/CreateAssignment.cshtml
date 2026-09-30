@@ -1,0 +1,38 @@
+@model SchoolManagement.ViewModels.CreateAssignmentViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create Assignment";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Teacher/ClassDetail/@Model.ClassId" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>Create Assignment</h4>
+</div>
+
+<div class="card p-4" style="max-width:640px">
+    <form asp-action="CreateAssignment" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="ClassId" type="hidden" />
+        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label fw-semibold"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label fw-semibold">Instructions</label>
+            <textarea asp-for="Description" class="form-control" rows="6"></textarea>
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="DueDate" class="form-label fw-semibold"></label>
+            <input asp-for="DueDate" class="form-control" type="datetime-local" />
+            <span asp-validation-for="DueDate" class="text-danger small"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-check-lg me-1"></i>Create Assignment
+        </button>
+    </form>
+</div>

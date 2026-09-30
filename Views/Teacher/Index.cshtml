@@ -1,0 +1,33 @@
+@model List<SchoolManagement.Models.Class>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "My Classes";
+}
+
+<h4 class="mb-4"><i class="bi bi-collection me-2"></i>My Classes</h4>
+
+<div class="row g-3">
+    @foreach (var cls in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@cls.Name</h5>
+                    <p class="card-text text-muted small">@(cls.Description ?? "No description")</p>
+                    <div class="text-muted small mb-3">
+                        <i class="bi bi-people me-1"></i>@cls.ClassStudents.Count student(s)
+                    </div>
+                    <a href="/Teacher/ClassDetail/@cls.Id" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-eye me-1"></i>Open Class
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="col-12">
+            <div class="alert alert-info">You have not been assigned to any classes yet. Contact an administrator.</div>
+        </div>
+    }
+</div>

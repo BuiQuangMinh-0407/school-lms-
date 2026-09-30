@@ -1,0 +1,41 @@
+@model SchoolManagement.ViewModels.EditUserViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Admin/Users" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit User</h4>
+</div>
+
+<div class="card p-4" style="max-width:560px">
+    <form asp-action="EditUser" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label fw-semibold"></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label fw-semibold"></label>
+            <input asp-for="Email" class="form-control" type="email" />
+            <span asp-validation-for="Email" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Role" class="form-label fw-semibold"></label>
+            <select asp-for="Role" asp-items="Html.GetEnumSelectList<SchoolManagement.Models.UserRole>()" class="form-select"></select>
+        </div>
+        <div class="mb-4 form-check">
+            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+            <label asp-for="IsActive" class="form-check-label fw-semibold">Account Active</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-check-lg me-1"></i>Save Changes
+        </button>
+    </form>
+</div>

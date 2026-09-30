@@ -1,0 +1,68 @@
+@model List<SchoolManagement.Models.AssignmentSubmission>
+@{
+    Layout = "_Layout";
+    var assignment = (SchoolManagement.Models.Assignment)ViewBag.Assignment;
+    ViewData["Title"] = "Submissions: " + assignment.Title;
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/Teacher/ClassDetail/@assignment.ClassId" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <div>
+        <h4 class="mb-0"><i class="bi bi-list-check me-2"></i>@assignment.Title</h4>
+        <small class="text-muted">Due: @assignment.DueDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <th>Submitted At</th>
+                    <th>Status</th>
+                    <th>Grade</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sub in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@sub.Student.FullName</td>
+                        <td>@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (sub.Grade.HasValue)
+                            {
+                                <span class="badge bg-success">Graded</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            }
+                        </td>
+                        <td>
+                            @if (sub.Grade.HasValue)
+                            {
+                                <strong>@sub.Grade / 100</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="/Teacher/Grade/@sub.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square me-1"></i>@(sub.Grade.HasValue ? "Re-grade" : "Grade")
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No submissions yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
