@@ -1,54 +1,57 @@
 @model SchoolManagement.ViewModels.ClassDetailViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = Model.Class.Name;
+    ViewData["Title"] = Model.Class.TenLop;
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Teacher/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <a href="/Teacher/Index" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
     <div>
-        <h4 class="mb-0">@Model.Class.Name</h4>
-        <small class="text-muted">@Model.Class.Description</small>
+        <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:#0F172A;">@Model.Class.TenLop</h2>
+        <small class="text-muted">Mã: <strong>@Model.Class.MaLop</strong> | HK @Model.Class.HocKy (@Model.Class.NamHoc)</small>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Lessons -->
+    <!-- Lessons (BaiHoc) -->
     <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-journal-richtext me-2"></i>Lessons</span>
-                <a href="/Teacher/CreateLesson?classId=@Model.Class.Id" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus"></i> New
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-journal-richtext text-primary"></i>
+                    <span>Bài Học & Bài Giảng (@Model.Lessons.Count)</span>
+                </div>
+                <a href="/Teacher/CreateLesson?classId=@Model.Class.LopHocId" class="btn-wb-primary" style="font-size:0.8rem;padding:5px 12px;">
+                    <i class="bi bi-plus-lg"></i> Thêm Bài Học
                 </a>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var l in Model.Lessons)
                 {
-                    <li class="list-group-item">
+                    <li class="list-group-item py-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <div class="fw-semibold">@l.Title</div>
-                                <small class="text-muted">Created @l.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                                <div class="fw-bold" style="color:#0F172A;font-size:0.95rem;">@l.TieuDe</div>
+                                <small class="text-muted">Tạo: @l.NgayTao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                             </div>
                             <div class="d-flex flex-column align-items-end gap-1">
-                                <span class="badge @(l.IsPublished ? "bg-success" : "bg-secondary")">
-                                    @(l.IsPublished ? "Published" : "Draft")
+                                <span class="wb-badge @(l.DaXuatBan ? "success" : "")" style="@(l.DaXuatBan ? "" : "background:#F1F5F9;color:#64748B;")">
+                                    @(l.DaXuatBan ? "Đã xuất bản" : "Bản nháp")
                                 </span>
                                 <div class="btn-group btn-group-sm mt-1">
-                                    <a href="/Teacher/EditLesson/@l.Id" class="btn btn-outline-secondary btn-sm">Edit</a>
-                                    @if (!l.IsPublished)
+                                    <a href="/Teacher/EditLesson/@l.BaiHocId" class="btn btn-outline-secondary btn-sm" style="font-size:0.75rem;">Sửa</a>
+                                    @if (!l.DaXuatBan)
                                     {
-                                        <form method="post" asp-action="PublishLesson" asp-controller="Teacher" asp-route-id="@l.Id">
+                                        <form method="post" asp-action="PublishLesson" asp-controller="Teacher" asp-route-id="@l.BaiHocId">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-success btn-sm">Publish</button>
+                                            <button type="submit" class="btn btn-success btn-sm ms-1" style="font-size:0.75rem;">Xuất bản</button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <form method="post" asp-action="UnpublishLesson" asp-controller="Teacher" asp-route-id="@l.Id">
+                                        <form method="post" asp-action="UnpublishLesson" asp-controller="Teacher" asp-route-id="@l.BaiHocId">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-warning btn-sm">Unpublish</button>
+                                            <button type="submit" class="btn btn-outline-warning btn-sm ms-1" style="font-size:0.75rem;">Hủy XB</button>
                                         </form>
                                     }
                                 </div>
@@ -58,63 +61,75 @@
                 }
                 @if (!Model.Lessons.Any())
                 {
-                    <li class="list-group-item text-muted">No lessons yet.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có bài học nào. Hãy tạo bài giảng đầu tiên!</li>
                 }
             </ul>
         </div>
     </div>
 
-    <!-- Assignments -->
+    <!-- Assignments (BaiTap) -->
     <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clipboard-check me-2"></i>Assignments</span>
-                <a href="/Teacher/CreateAssignment?classId=@Model.Class.Id" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-plus"></i> New
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-clipboard-check text-success"></i>
+                    <span>Bài Tập & Bài Kiểm Tra (@Model.Assignments.Count)</span>
+                </div>
+                <a href="/Teacher/CreateAssignment?classId=@Model.Class.LopHocId" class="btn-wb-primary" style="font-size:0.8rem;padding:5px 12px;background:#059669;border-color:#059669;">
+                    <i class="bi bi-plus-lg"></i> Thêm Bài Tập
                 </a>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var a in Model.Assignments)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <div class="fw-semibold">@a.Title</div>
-                            <small class="text-muted">Due @a.DueDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                            <div class="fw-bold" style="color:#0F172A;font-size:0.95rem;">@a.TieuDe</div>
+                            <small class="text-muted">Hạn nộp: @(a.HanNop?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Không giới hạn")</small>
                         </div>
-                        <a href="/Teacher/Submissions/@a.Id" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-list-check me-1"></i>Submissions
+                        <a href="/Teacher/Submissions/@a.BaiTapId" class="btn-wb-outline" style="font-size:0.8rem;padding:4px 12px;">
+                            <i class="bi bi-list-check me-1"></i> Xem Bài Nộp
                         </a>
                     </li>
                 }
                 @if (!Model.Assignments.Any())
                 {
-                    <li class="list-group-item text-muted">No assignments yet.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có bài tập nào.</li>
                 }
             </ul>
         </div>
     </div>
 
-    <!-- Students -->
+    <!-- Enrolled Students -->
     <div class="col-lg-12">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-people me-2"></i>Enrolled Students (@Model.Students.Count)</div>
+        <div class="wb-card">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-people-fill text-indigo"></i>
+                    <span>Danh Sách Sinh Viên (@Model.Students.Count)</span>
+                </div>
+            </div>
             <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light">
-                        <tr><th>Name</th><th>Username</th><th>Email</th></tr>
+                <table class="wb-table">
+                    <thead>
+                        <tr>
+                            <th>Họ và Tên</th>
+                            <th>Mã Sinh Viên</th>
+                            <th>Email</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @foreach (var s in Model.Students)
                         {
                             <tr>
-                                <td>@s.FullName</td>
-                                <td><code>@s.Username</code></td>
-                                <td>@s.Email</td>
+                                <td class="fw-bold">@s.HoTen</td>
+                                <td><code style="background:#F1F5F9;color:#2563EB;padding:2px 8px;border-radius:5px;">@s.MaSinhVien</code></td>
+                                <td class="text-muted">@s.Email</td>
                             </tr>
                         }
                         @if (!Model.Students.Any())
                         {
-                            <tr><td colspan="3" class="text-muted">No students enrolled.</td></tr>
+                            <tr><td colspan="3" class="text-muted text-center py-4">Chưa có sinh viên nào trong lớp.</td></tr>
                         }
                     </tbody>
                 </table>

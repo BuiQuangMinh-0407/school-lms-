@@ -6,53 +6,542 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login – SchoolMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
-        body { background: linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
-        .login-card { border-radius: 16px; max-width: 420px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
-        .brand-title { color: #e94560; font-weight: 800; font-size: 2rem; }
+        :root {
+            --brand-blue: #2356C8;
+            --btn-blue: #2F72F5;
+            --btn-blue-hover: #1E60E0;
+            --text-dark: #1A2740;
+            --text-muted: #8E9BAE;
+            --border-line: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            background: #CEDEF8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Textured organic background shapes like Image 2 */
+        .bg-blob {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(2px);
+        }
+
+        .bg-blob-1 {
+            width: 550px;
+            height: 550px;
+            top: -120px;
+            right: -100px;
+            background: radial-gradient(circle, #9ABCF7 0%, #B8D1FA 60%, rgba(206, 222, 248, 0) 80%);
+            border-radius: 46% 54% 63% 37% / 41% 58% 42% 59%;
+            opacity: 0.85;
+            animation: floatBlob1 18s ease-in-out infinite alternate;
+        }
+
+        .bg-blob-2 {
+            width: 480px;
+            height: 480px;
+            bottom: -150px;
+            left: -120px;
+            background: radial-gradient(circle, #8EB5F7 0%, #B2CEFA 60%, rgba(206, 222, 248, 0) 80%);
+            border-radius: 60% 40% 48% 52% / 55% 42% 58% 45%;
+            opacity: 0.8;
+            animation: floatBlob2 20s ease-in-out infinite alternate;
+        }
+
+        .bg-blob-3 {
+            width: 320px;
+            height: 320px;
+            top: 40%;
+            left: -80px;
+            background: radial-gradient(circle, #A5C5FB 0%, #C4DAFB 70%, rgba(206, 222, 248, 0) 85%);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        @@keyframes floatBlob1 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-30px, 40px) rotate(15deg); }
+        }
+
+        @@keyframes floatBlob2 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(40px, -30px) rotate(-12deg); }
+        }
+
+        /* Center Card Frame (Matching Image 2 rounded thick blue outline) */
+        .login-master-frame {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1040px;
+            min-height: 580px;
+            background: #FFFFFF;
+            border: 3.5px solid var(--brand-blue);
+            border-radius: 36px;
+            box-shadow: 0 24px 70px rgba(35, 86, 200, 0.22);
+            display: flex;
+            overflow: hidden;
+            animation: framePop .45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @@keyframes framePop {
+            0% { opacity: 0; transform: scale(0.96) translateY(14px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ── Left Form Panel ─────────────────────────────────── */
+        .login-left-pane {
+            width: 39%;
+            min-width: 340px;
+            padding: 56px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            z-index: 3;
+            background: #FFFFFF;
+        }
+
+        .brand-badge {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dark);
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-heading {
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subheading {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 38px;
+        }
+
+        /* Clean Underline Input Fields (Matching Image 2) */
+        .clean-field {
+            margin-bottom: 26px;
+            position: relative;
+        }
+
+        .clean-field label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #5D6C82;
+            margin-bottom: 4px;
+        }
+
+        .clean-field input {
+            width: 100%;
+            border: none;
+            border-bottom: 1.5px solid var(--border-line);
+            padding: 8px 30px 8px 0;
+            font-size: 14px;
+            color: var(--text-dark);
+            background: transparent;
+            border-radius: 0;
+            outline: none;
+            transition: border-color .2s;
+            font-family: inherit;
+        }
+
+        .clean-field input:focus {
+            border-bottom-color: var(--btn-blue);
+        }
+
+        .clean-field input::placeholder {
+            color: #B5C0CE;
+            font-size: 13px;
+        }
+
+        .clean-field .pw-toggle {
+            position: absolute;
+            right: 0;
+            bottom: 8px;
+            color: #9AA7B8;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color .2s;
+        }
+
+        .clean-field .pw-toggle:hover {
+            color: var(--btn-blue);
+        }
+
+        .field-validation-error {
+            display: block;
+            font-size: 11.5px;
+            color: #DC2626;
+            margin-top: 4px;
+        }
+
+        .login-alert {
+            padding: 9px 12px;
+            border-radius: 8px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+            font-size: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Blue Button (Matching Image 2) */
+        .btn-login-pill {
+            background: var(--btn-blue);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 38px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 10px 24px -2px rgba(47, 114, 245, 0.45);
+            transition: all .2s ease;
+            width: 140px;
+            margin-top: 10px;
+        }
+
+        .btn-login-pill:hover {
+            background: var(--btn-blue-hover);
+            box-shadow: 0 14px 28px -2px rgba(47, 114, 245, 0.55);
+            transform: translateY(-1.5px);
+        }
+
+        .btn-login-pill:active {
+            transform: translateY(0);
+        }
+
+        /* ── Right Illustration Panel ────────────────────────── */
+        .login-right-pane {
+            flex: 1;
+            background: #FFFFFF;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .illustration-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 580px;
+            max-height: 480px;
+        }
+
+        /* Responsive rules */
+        @@media (max-width: 820px) {
+            .login-right-pane {
+                display: none;
+            }
+            .login-left-pane {
+                width: 100%;
+                min-width: 0;
+                padding: 44px 32px;
+            }
+            .login-master-frame {
+                border-radius: 24px;
+                border-width: 2.5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="card login-card p-4">
-        <div class="text-center mb-4">
-            <div class="brand-title"><i class="bi bi-mortarboard-fill"></i> SchoolMS</div>
-            <p class="text-muted">School Management System</p>
-        </div>
 
-        <form asp-action="Login" method="post">
-            <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+    <!-- Ambient organic blobs -->
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
 
-            <div class="mb-3">
-                <label asp-for="Username" class="form-label fw-semibold">Username</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input asp-for="Username" class="form-control" placeholder="Enter username" autocomplete="username" />
-                </div>
-                <span asp-validation-for="Username" class="text-danger small"></span>
+    <!-- Center Login Frame (Matches Image 2) -->
+    <div class="login-master-frame">
+
+        <!-- Left Column: Login Form -->
+        <div class="login-left-pane">
+            <div class="brand-badge">
+                <i class="bi bi-mortarboard-fill text-primary" style="font-size:1.1rem;"></i>
+                <span>SchoolMS</span>
             </div>
 
-            <div class="mb-4">
-                <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" autocomplete="current-password" />
+            <h1 class="login-heading">Login</h1>
+            <p class="login-subheading">Welcome to log in to your background management system.</p>
+
+            <form asp-action="Login" method="post">
+                @{
+                    var hasErrors = !ViewData.ModelState.IsValid &&
+                                    ViewData.ModelState.ContainsKey(string.Empty) &&
+                                    ViewData.ModelState[string.Empty]!.Errors.Count > 0;
+                }
+                @if (hasErrors)
+                {
+                    <div class="login-alert">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        <span>@ViewData.ModelState[string.Empty]!.Errors[0].ErrorMessage</span>
+                    </div>
+                }
+
+                <div class="clean-field">
+                    <label>Email / Tài khoản</label>
+                    <input asp-for="Email" placeholder="e.g. admin@neu.edu.vn, gv.an@neu.edu.vn" autocomplete="username" />
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
                 </div>
-                <span asp-validation-for="Password" class="text-danger small"></span>
-            </div>
 
-            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-            </button>
-        </form>
+                <div class="clean-field">
+                    <label>Password</label>
+                    <input asp-for="Password" type="password" id="loginPw" placeholder="Please enter your password" autocomplete="current-password" />
+                    <i class="bi bi-eye pw-toggle" id="pwToggle" title="Toggle password visibility"></i>
+                    <span asp-validation-for="Password" class="field-validation-error"></span>
+                </div>
 
-        <div class="text-center mt-3">
-            <small class="text-muted">Account locked? Contact your administrator.</small>
+                <button type="submit" class="btn-login-pill">LOGIN</button>
+            </form>
         </div>
+
+        <!-- Right Column: Vector Illustration (Exact replication of Image 2) -->
+        <div class="login-right-pane">
+            <svg class="illustration-svg" viewBox="0 0 600 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <!-- Backdrop gradients -->
+                    <radialGradient id="softBackdrop" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#9CBDF8" stop-opacity="0.9" />
+                        <stop offset="65%" stop-color="#B7D2FB" stop-opacity="0.75" />
+                        <stop offset="100%" stop-color="#E2EDFC" stop-opacity="0" />
+                    </radialGradient>
+                    <linearGradient id="cloudGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#93B7F7" />
+                        <stop offset="100%" stop-color="#BFD6FB" />
+                    </linearGradient>
+                    <linearGradient id="boardGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#FFFFFF" />
+                        <stop offset="100%" stop-color="#F4F8FE" />
+                    </linearGradient>
+                    <linearGradient id="pieBlue" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#3B74ED" />
+                        <stop offset="100%" stop-color="#2558CA" />
+                    </linearGradient>
+                    <linearGradient id="pieLavender" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#9BBDF7" />
+                        <stop offset="100%" stop-color="#BBD5FB" />
+                    </linearGradient>
+                    <linearGradient id="barColumnGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#5587F5" />
+                        <stop offset="100%" stop-color="#2D5EC9" />
+                    </linearGradient>
+                </defs>
+
+                <!-- 1. Layered soft organic backdrop shapes -->
+                <path d="M180 280 C150 180, 240 100, 340 110 C440 120, 520 160, 510 260 C500 350, 420 380, 310 370 C220 360, 190 320, 180 280 Z" fill="url(#softBackdrop)" />
+                <path d="M220 230 C200 160, 270 120, 360 130 C450 140, 480 210, 470 290 C450 340, 360 360, 290 340 C230 320, 230 270, 220 230 Z" fill="#9FBFF8" opacity="0.65" />
+                <path d="M260 210 C290 140, 380 140, 430 180 C480 220, 460 280, 420 320 C370 340, 300 330, 270 290 C250 250, 250 230, 260 210 Z" fill="#B3CEFA" opacity="0.5" />
+
+                <!-- Ground baseline -->
+                <line x1="160" y1="380" x2="550" y2="380" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4 4" />
+
+                <!-- 2. Floating 3D Pie Slice (Top Left) -->
+                <g transform="translate(130, 70) rotate(-15)">
+                    <!-- Isometric Pie Slice -->
+                    <path d="M40 20 L75 35 L40 50 L5 35 Z" fill="#99BCF6" />
+                    <path d="M5 35 L40 50 L40 68 L5 53 Z" fill="#6699EE" />
+                    <path d="M40 50 L75 35 L75 53 L40 68 Z" fill="#3D76E8" />
+                    <path d="M40 20 L5 35 L40 50 Z" fill="#B8D3FB" />
+                </g>
+
+                <!-- Floating Sphere (Top Right) -->
+                <circle cx="475" cy="140" r="9" fill="#588BF6" opacity="0.8" />
+                <circle cx="472" cy="138" r="3" fill="#FFFFFF" opacity="0.6" />
+
+                <!-- 3. Central Dashboard Frame (Matches Image 2 display) -->
+                <g id="mainDashboardBoard">
+                    <!-- Screen Outer Border with Shadow -->
+                    <rect x="220" y="180" width="230" height="150" rx="14" fill="#FFFFFF" stroke="#3D6CD4" stroke-width="3" />
+                    
+                    <!-- Left Control Bezel (Grey-navy bar with 5 circle buttons) -->
+                    <path d="M222 182 H242 V328 H222 Q220 328 220 326 V184 Q220 182 222 182 Z" fill="#425574" />
+                    <circle cx="231" cy="198" r="4.5" fill="#CAD8ED" />
+                    <circle cx="231" cy="214" r="4.5" fill="#CAD8ED" />
+                    <circle cx="231" cy="230" r="4.5" fill="#CAD8ED" />
+                    <circle cx="231" cy="246" r="4.5" fill="#CAD8ED" />
+                    <circle cx="231" cy="262" r="4.5" fill="#CAD8ED" />
+                    <circle cx="231" cy="310" r="5" fill="#CAD8ED" />
+
+                    <!-- Top progress pills / sliders inside screen -->
+                    <rect x="252" y="194" width="22" height="6" rx="3" fill="#4B81F0" />
+                    <rect x="280" y="195" width="40" height="4" rx="2" fill="#E2EDFC" />
+                    <circle cx="295" cy="197" r="4" fill="#4B81F0" />
+
+                    <!-- Left Data Bars -->
+                    <rect x="252" y="212" width="38" height="8" rx="3" fill="#BACFF8" />
+                    <rect x="252" y="226" width="48" height="10" rx="3" fill="#477EE8" />
+                    <rect x="252" y="242" width="20" height="8" rx="3" fill="#285DC7" />
+
+                    <!-- Center Large Pie Chart -->
+                    <g transform="translate(340, 235)">
+                        <circle cx="0" cy="0" r="32" fill="#CADDFB" />
+                        <!-- Pie slices -->
+                        <path d="M0 0 L-22 23 A32 32 0 0 1 -28 -15 Z" fill="#699AF6" />
+                        <path d="M0 0 L-28 -15 A32 32 0 0 1 20 -25 Z" fill="#97BDF9" />
+                        <path d="M0 0 L20 -25 A32 32 0 0 1 32 0 L0 0 Z" fill="#B7D2FB" />
+                        <path d="M0 0 L32 0 A32 32 0 0 1 -22 23 Z" fill="#3B73EB" />
+                    </g>
+
+                    <!-- Right List items / Checklist -->
+                    <g transform="translate(390, 202)">
+                        <rect x="0" y="0" width="8" height="8" rx="2" fill="#467EEC" />
+                        <rect x="13" y="2" width="22" height="4" rx="2" fill="#C2D8FC" />
+
+                        <rect x="0" y="14" width="8" height="8" rx="2" fill="#467EEC" />
+                        <rect x="13" y="16" width="22" height="4" rx="2" fill="#C2D8FC" />
+
+                        <rect x="0" y="28" width="8" height="8" rx="2" fill="#467EEC" />
+                        <rect x="13" y="30" width="22" height="4" rx="2" fill="#C2D8FC" />
+                    </g>
+
+                    <!-- Bottom Preview Data Panels -->
+                    <rect x="260" y="288" width="48" height="18" rx="4" fill="#E8F1FD" />
+                    <circle cx="270" cy="297" r="4" fill="#9ABCF7" />
+                    <rect x="278" y="295" width="24" height="4" rx="2" fill="#BACFF8" />
+
+                    <rect x="320" y="288" width="48" height="18" rx="4" fill="#E8F1FD" />
+                    <circle cx="330" cy="297" r="4" fill="#467EEC" />
+                    <rect x="338" y="295" width="24" height="4" rx="2" fill="#BACFF8" />
+
+                    <rect x="380" y="288" width="48" height="18" rx="4" fill="#E8F1FD" />
+                    <circle cx="390" cy="297" r="4" fill="#9ABCF7" />
+                    <rect x="398" y="295" width="24" height="4" rx="2" fill="#BACFF8" />
+                </g>
+
+                <!-- 4. 3D Bar Chart Emerging from Cut-Out Hole (Bottom Center) -->
+                <g transform="translate(380, 360)">
+                    <!-- Floor cut-out hole -->
+                    <ellipse cx="25" cy="40" rx="30" ry="10" fill="#1C3872" />
+                    <ellipse cx="25" cy="40" rx="27" ry="8" fill="#12244E" />
+
+                    <!-- 3D Columns emerging -->
+                    <!-- Col 1 -->
+                    <path d="M10 15 L20 10 L20 40 L10 45 Z" fill="#2554B8" />
+                    <path d="M20 10 L30 15 L30 45 L20 40 Z" fill="#3D70E2" />
+                    <path d="M10 15 L20 10 L30 15 L20 20 Z" fill="#729FF6" />
+
+                    <!-- Col 2 (taller) -->
+                    <path d="M24 0 L34 -5 L34 38 L24 43 Z" fill="#1D47A2" />
+                    <path d="M34 -5 L44 0 L44 43 L34 38 Z" fill="#3263D4" />
+                    <path d="M24 0 L34 -5 L44 0 L34 5 Z" fill="#5F8FF5" />
+
+                    <!-- Col 3 (short) -->
+                    <path d="M36 22 L44 18 L44 41 L36 45 Z" fill="#173E92" />
+                    <path d="M44 18 L52 22 L52 45 L44 41 Z" fill="#295AC8" />
+                    <path d="M36 22 L44 18 L52 22 L44 26 Z" fill="#5486F2" />
+                </g>
+
+                <!-- 5. Left Character (Girl holding bar chart board) -->
+                <g id="girlCharacter">
+                    <!-- Head & Bob Hair -->
+                    <circle cx="215" cy="235" r="11" fill="#E6BA9C" />
+                    <path d="M203 234 C203 221, 227 221, 227 234 C227 238, 225 245, 223 247 C220 248, 218 244, 215 244 C212 244, 210 248, 207 247 C205 245, 203 238, 203 234 Z" fill="#233452" />
+                    <!-- Body (Dark blue top) -->
+                    <path d="M206 248 L224 248 L228 290 L202 290 Z" fill="#4B6EB5" />
+                    <!-- Wide flare trousers -->
+                    <path d="M202 290 L214 290 L210 350 L195 350 Z" fill="#365499" />
+                    <path d="M216 290 L228 290 L233 350 L219 350 Z" fill="#365499" />
+                    <!-- Shoes -->
+                    <ellipse cx="202" cy="353" rx="7" ry="3" fill="#1C2D4A" />
+                    <ellipse cx="227" cy="353" rx="7" ry="3" fill="#1C2D4A" />
+
+                    <!-- White Chart Board held in hands -->
+                    <rect x="180" y="275" width="46" height="42" rx="4" fill="#FFFFFF" stroke="#8EB1F6" stroke-width="2" />
+                    <!-- Bars inside held board -->
+                    <rect x="188" y="295" width="3.5" height="15" rx="1.5" fill="#4A7CE8" />
+                    <rect x="194" y="287" width="3.5" height="23" rx="1.5" fill="#4A7CE8" />
+                    <rect x="200" y="291" width="3.5" height="19" rx="1.5" fill="#4A7CE8" />
+                    <rect x="206" y="283" width="3.5" height="27" rx="1.5" fill="#4A7CE8" />
+                    <rect x="212" y="297" width="3.5" height="13" rx="1.5" fill="#4A7CE8" />
+
+                    <!-- Hands holding board -->
+                    <circle cx="182" cy="296" r="4" fill="#E6BA9C" />
+                    <circle cx="224" cy="296" r="4" fill="#E6BA9C" />
+                </g>
+
+                <!-- 6. Right Character (Boy placing card into screen) -->
+                <g id="boyCharacter">
+                    <!-- Head & Short Hair -->
+                    <circle cx="496" cy="240" r="11" fill="#E6BA9C" />
+                    <path d="M485 238 C485 227, 507 227, 507 238 C507 241, 505 243, 502 243 C499 238, 493 238, 490 243 C487 243, 485 241, 485 238 Z" fill="#233452" />
+                    <!-- Body (Dark blue top) -->
+                    <path d="M487 252 L505 252 L509 295 L483 295 Z" fill="#4B6EB5" />
+                    <!-- Trousers -->
+                    <path d="M483 295 L495 295 L491 352 L480 352 Z" fill="#365499" />
+                    <path d="M497 295 L509 295 L516 348 L504 348 Z" fill="#365499" />
+                    <!-- Shoes -->
+                    <ellipse cx="486" cy="354" rx="7" ry="3" fill="#1C2D4A" />
+                    <ellipse cx="512" cy="351" rx="7" ry="3" fill="#1C2D4A" />
+
+                    <!-- Arms extended holding card -->
+                    <path d="M487 258 L455 272" stroke="#4B6EB5" stroke-width="7" stroke-linecap="round" />
+                    <circle cx="454" cy="272" r="4" fill="#E6BA9C" />
+
+                    <!-- Data Card being slotted in -->
+                    <rect x="444" y="260" width="38" height="22" rx="4" fill="#E2EDFC" stroke="#689BF5" stroke-width="1.5" />
+                    <rect x="450" y="267" width="26" height="3" rx="1.5" fill="#5285ED" />
+                    <rect x="450" y="273" width="18" height="3" rx="1.5" fill="#91B6F8" />
+                </g>
+            </svg>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password toggle visibility
+        const pwToggle = document.getElementById('pwToggle');
+        const loginPw  = document.getElementById('loginPw');
+        if (pwToggle && loginPw) {
+            pwToggle.addEventListener('click', () => {
+                const isText = loginPw.type === 'text';
+                loginPw.type = isText ? 'password' : 'text';
+                pwToggle.className = isText ? 'bi bi-eye pw-toggle' : 'bi bi-eye-slash pw-toggle text-primary';
+            });
+        }
+    </script>
 </body>
 </html>

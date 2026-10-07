@@ -1,34 +1,54 @@
-@model List<SchoolManagement.Models.Class>
+@model List<SchoolManagement.Models.DBNew2026.LopHoc>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "My Classes";
+    ViewData["Title"] = "Lớp Học Của Tôi";
 }
 
-<h4 class="mb-4"><i class="bi bi-collection me-2"></i>My Enrolled Classes</h4>
+<div class="wb-welcome-banner mb-4">
+    <div>
+        <div class="wb-welcome-title"><i class="bi bi-mortarboard-fill me-2"></i>Cổng Học Tập Sinh Viên</div>
+        <div class="wb-welcome-sub">Các lớp học bạn đang tham gia. Học bài mới và nộp bài tập đúng hạn nhé!</div>
+    </div>
+    <div>
+        <a href="/Student/MyGrades" class="wb-btn-white">
+            <i class="bi bi-award-fill me-1"></i> Xem Bảng Điểm
+        </a>
+    </div>
+</div>
 
-<div class="row g-3">
+<div class="row g-4">
     @foreach (var cls in Model)
     {
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">@cls.Name</h5>
-                    <p class="card-text text-muted small">@(cls.Description ?? "No description")</p>
-                    <div class="text-muted small mb-3">
-                        <span class="me-3"><i class="bi bi-journal-richtext me-1"></i>@cls.Lessons.Count lesson(s)</span>
-                        <span><i class="bi bi-clipboard me-1"></i>@cls.Assignments.Count assignment(s)</span>
+            <div class="wb-card h-100 d-flex flex-column mb-0" style="padding: 24px;">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="wb-stat-icon sky" style="width:48px;height:48px;font-size:1.3rem;">
+                        <i class="bi bi-book-half"></i>
                     </div>
-                    <a href="/Student/ClassDetail/@cls.Id" class="btn btn-sm btn-outline-primary w-100">
-                        <i class="bi bi-door-open me-1"></i>Enter Class
-                    </a>
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color:#0F172A;font-size:1.1rem;">@cls.TenLop</h5>
+                        <small class="text-muted">Mã lớp: <strong>@cls.MaLop</strong> | HK @cls.HocKy (@cls.NamHoc)</small>
+                    </div>
                 </div>
+
+                <div class="d-flex gap-4 text-muted small mb-4 pb-3" style="border-bottom:1.5px solid #F1F5F9;">
+                    <span><i class="bi bi-journal-richtext text-primary me-1"></i><strong>@cls.BaiHocs.Count</strong> bài học</span>
+                    <span><i class="bi bi-clipboard-check text-success me-1"></i><strong>@cls.BaiTaps.Count</strong> bài tập</span>
+                </div>
+
+                <a href="/Student/ClassDetail/@cls.LopHocId" class="btn-wb-primary w-100 justify-content-center py-2 mt-auto">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Vào Lớp Học
+                </a>
             </div>
         </div>
     }
+
     @if (!Model.Any())
     {
         <div class="col-12">
-            <div class="alert alert-info">You are not enrolled in any classes yet. Contact your administrator.</div>
+            <div class="alert alert-info" style="border-radius:14px;border:none;background:#EFF6FF;color:#1E40AF;">
+                <i class="bi bi-info-circle-fill me-2"></i> Bạn chưa được ghi danh vào lớp học nào. Vui lòng liên hệ quản trị viên hoặc phòng đào tạo.
+            </div>
         </div>
     }
 </div>

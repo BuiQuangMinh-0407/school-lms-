@@ -1,19 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SchoolManagement.Data;
-using SchoolManagement.Models;
+using SchoolManagement.Models.DBNew2026;
+using SchoolManagement.Services;
 using SchoolManagement.ViewModels;
 
 namespace SchoolManagement.Controllers
 {
-    /// <summary>
-    /// All admin-only actions. Every action checks the session role = Admin.
-    /// </summary>
     public class AdminController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly DBNew2026Context _db;
 
-        public AdminController(AppDbContext db) => _db = db;
+        public AdminController(DBNew2026Context db) => _db = db;
 
         private IActionResult? RequireAdmin()
         {
@@ -31,15 +28,15 @@ namespace SchoolManagement.Controllers
         {
             if (RequireAdmin() is { } redirect) return redirect;
 
-            ViewBag.TotalUsers    = await _db.Users.CountAsync();
-            ViewBag.TotalClasses  = await _db.Classes.CountAsync();
-            ViewBag.TotalStudents = await _db.Users.CountAsync(u => u.Role == UserRole.Student);
-            ViewBag.TotalTeachers = await _db.Users.CountAsync(u => u.Role == UserRole.Teacher);
-            ViewBag.RecentLogs    = await _db.ActivityLogs
-                .Include(l => l.User)
-                .OrderByDescending(l => l.OccurredAt)
+            ViewBag.TotalUsers    = await _db.TaiKhoans.CountAsync();
+            ViewBag.TotalClasses  = await _db.LopHocs.CountAsync();
+            ViewBag.TotalTeachers = await _db.GiangViens.CountAsync();
+            ViewBag.TotalStudents = await _db.SinhViens.CountAsync();
+            ViewBag.RecentLogs    = await _db.NhatKyDangNhaps
+                .OrderByDescending(l => l.ThoiDiem)
                 .Take(10)
                 .ToListAsync();
+
             return View();
         }
 
@@ -50,7 +47,10 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> Users()
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var users = await _db.Users.OrderBy(u => u.Role).ThenBy(u => u.FullName).ToListAsync();
+            var users = await _db.TaiKhoans
+                .OrderBy(u => u.VaiTro)
+                .ThenBy(u => u.HoTen)
+                .ToListAsync();
             return View(users);
         }
 
@@ -58,7 +58,7 @@ namespace SchoolManagement.Controllers
         public IActionResult CreateUser()
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            return View();
+            return View(new CreateUserViewModel());
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -67,29 +67,58 @@ namespace SchoolManagement.Controllers
             if (RequireAdmin() is { } redirect) return redirect;
             if (!ModelState.IsValid) return View(model);
 
-            if (await _db.Users.AnyAsync(u => u.Username == model.Username))
+            var email = model.Email.Trim();
+            if (await _db.TaiKhoans.AnyAsync(u => u.Email == email))
             {
-                ModelState.AddModelError("Username", "Username already taken.");
-                return View(model);
-            }
-            if (await _db.Users.AnyAsync(u => u.Email == model.Email))
-            {
-                ModelState.AddModelError("Email", "Email already in use.");
+                ModelState.AddModelError("Email", "Email này đã được sử dụng.");
                 return View(model);
             }
 
-            var user = new ApplicationUser
+            var taiKhoan = new TaiKhoan
             {
-                FullName     = model.FullName,
-                Username     = model.Username,
-                Email        = model.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password, workFactor: 11),
-                Role         = model.Role,
-                IsActive     = true
+                Email       = email,
+                HoTen       = model.FullName.Trim(),
+                MatKhauHash = PasswordHasher.Hash(model.Password),
+                VaiTro      = model.Role,
+                BiKhoa      = false,
+                SoLanSai    = 0,
+                KhoaDen     = null
             };
-            _db.Users.Add(user);
+            _db.TaiKhoans.Add(taiKhoan);
             await _db.SaveChangesAsync();
-            TempData["Success"] = $"Account for '{model.FullName}' created successfully.";
+
+            // Link to GiangVien or SinhVien
+            if (model.Role == "GiangVien")
+            {
+                var gvCode = !string.IsNullOrWhiteSpace(model.Code) 
+                    ? model.Code.Trim() 
+                    : $"GV{taiKhoan.TaiKhoanId:D4}";
+                _db.GiangViens.Add(new GiangVien
+                {
+                    MaGiangVien = gvCode,
+                    HoTen       = taiKhoan.HoTen,
+                    Email       = taiKhoan.Email,
+                    BoMon       = "Công nghệ thông tin",
+                    TaiKhoanId  = taiKhoan.TaiKhoanId
+                });
+                await _db.SaveChangesAsync();
+            }
+            else if (model.Role == "SinhVien")
+            {
+                var svCode = !string.IsNullOrWhiteSpace(model.Code) 
+                    ? model.Code.Trim() 
+                    : $"SV{taiKhoan.TaiKhoanId:D4}";
+                _db.SinhViens.Add(new SinhVien
+                {
+                    MaSinhVien = svCode,
+                    HoTen      = taiKhoan.HoTen,
+                    Email      = taiKhoan.Email,
+                    TaiKhoanId = taiKhoan.TaiKhoanId
+                });
+                await _db.SaveChangesAsync();
+            }
+
+            TempData["Success"] = $"Đã tạo tài khoản cho '{model.FullName}'.";
             return RedirectToAction("Users");
         }
 
@@ -97,16 +126,16 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> EditUser(int id)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var user = await _db.Users.FindAsync(id);
+            var user = await _db.TaiKhoans.FindAsync(id);
             if (user == null) return NotFound();
 
             var vm = new EditUserViewModel
             {
-                Id       = user.Id,
-                FullName = user.FullName,
+                Id       = user.TaiKhoanId,
+                FullName = user.HoTen,
                 Email    = user.Email,
-                Role     = user.Role,
-                IsActive = user.IsActive
+                Role     = user.VaiTro,
+                IsLocked = user.BiKhoa
             };
             return View(vm);
         }
@@ -117,26 +146,41 @@ namespace SchoolManagement.Controllers
             if (RequireAdmin() is { } redirect) return redirect;
             if (!ModelState.IsValid) return View(model);
 
-            var user = await _db.Users.FindAsync(model.Id);
+            var user = await _db.TaiKhoans.FindAsync(model.Id);
             if (user == null) return NotFound();
 
-            // Prevent removing the last admin
-            if (user.Role == UserRole.Admin && model.Role != UserRole.Admin)
+            // Prevent demoting the last active Admin
+            if (user.VaiTro == "Admin" && model.Role != "Admin")
             {
-                var adminCount = await _db.Users.CountAsync(u => u.Role == UserRole.Admin && u.IsActive);
+                var adminCount = await _db.TaiKhoans.CountAsync(u => u.VaiTro == "Admin" && !u.BiKhoa);
                 if (adminCount <= 1)
                 {
-                    ModelState.AddModelError("", "Cannot demote the last active admin.");
+                    ModelState.AddModelError("", "Không thể đổi vai trò của quản trị viên duy nhất.");
                     return View(model);
                 }
             }
 
-            user.FullName = model.FullName;
-            user.Email    = model.Email;
-            user.Role     = model.Role;
-            user.IsActive = model.IsActive;
+            user.HoTen  = model.FullName.Trim();
+            user.Email  = model.Email.Trim();
+            user.VaiTro = model.Role;
+            user.BiKhoa = model.IsLocked;
+
+            // Sync with GiangVien / SinhVien records
+            var gv = await _db.GiangViens.FirstOrDefaultAsync(g => g.TaiKhoanId == user.TaiKhoanId);
+            if (gv != null)
+            {
+                gv.HoTen = user.HoTen;
+                gv.Email = user.Email;
+            }
+            var sv = await _db.SinhViens.FirstOrDefaultAsync(s => s.TaiKhoanId == user.TaiKhoanId);
+            if (sv != null)
+            {
+                sv.HoTen = user.HoTen;
+                sv.Email = user.Email;
+            }
+
             await _db.SaveChangesAsync();
-            TempData["Success"] = "User updated.";
+            TempData["Success"] = "Cập nhật tài khoản thành công.";
             return RedirectToAction("Users");
         }
 
@@ -144,14 +188,15 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> ResetPassword(int id, string newPassword)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var user = await _db.Users.FindAsync(id);
+            var user = await _db.TaiKhoans.FindAsync(id);
             if (user == null) return NotFound();
 
-            user.PasswordHash        = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 11);
-            user.FailedLoginAttempts = 0;
-            user.LockoutEnd          = null;
+            user.MatKhauHash = PasswordHasher.Hash(newPassword);
+            user.SoLanSai    = 0;
+            user.KhoaDen     = null;
             await _db.SaveChangesAsync();
-            TempData["Success"] = $"Password for '{user.FullName}' reset.";
+
+            TempData["Success"] = $"Đã đặt lại mật khẩu cho '{user.HoTen}'.";
             return RedirectToAction("Users");
         }
 
@@ -159,13 +204,15 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> UnlockUser(int id)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var user = await _db.Users.FindAsync(id);
+            var user = await _db.TaiKhoans.FindAsync(id);
             if (user == null) return NotFound();
 
-            user.FailedLoginAttempts = 0;
-            user.LockoutEnd          = null;
+            user.BiKhoa   = false;
+            user.SoLanSai = 0;
+            user.KhoaDen  = null;
             await _db.SaveChangesAsync();
-            TempData["Success"] = $"Account '{user.Username}' unlocked.";
+
+            TempData["Success"] = $"Đã mở khóa tài khoản '{user.Email}'.";
             return RedirectToAction("Users");
         }
 
@@ -176,10 +223,10 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> Classes()
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var classes = await _db.Classes
-                .Include(c => c.ClassTeachers).ThenInclude(ct => ct.Teacher)
-                .Include(c => c.ClassStudents)
-                .OrderBy(c => c.Name)
+            var classes = await _db.LopHocs
+                .Include(c => c.PhanCongGiangDays).ThenInclude(pc => pc.GiangVien)
+                .Include(c => c.SinhVienLops)
+                .OrderBy(c => c.TenLop)
                 .ToListAsync();
             return View(classes);
         }
@@ -188,7 +235,7 @@ namespace SchoolManagement.Controllers
         public IActionResult CreateClass()
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            return View();
+            return View(new CreateClassViewModel());
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -197,79 +244,104 @@ namespace SchoolManagement.Controllers
             if (RequireAdmin() is { } redirect) return redirect;
             if (!ModelState.IsValid) return View(model);
 
-            var cls = new Class
+            if (await _db.LopHocs.AnyAsync(l => l.MaLop == model.MaLop.Trim()))
             {
-                Name        = model.Name,
-                Description = model.Description
+                ModelState.AddModelError("MaLop", "Mã lớp này đã tồn tại.");
+                return View(model);
+            }
+
+            var cls = new LopHoc
+            {
+                MaLop     = model.MaLop.Trim().ToUpper(),
+                TenLop    = model.TenLop.Trim(),
+                NamHoc    = model.NamHoc.Trim(),
+                HocKy     = model.HocKy,
+                SiSoToiDa = model.SiSoToiDa
             };
-            _db.Classes.Add(cls);
+            _db.LopHocs.Add(cls);
             await _db.SaveChangesAsync();
-            TempData["Success"] = $"Class '{cls.Name}' created.";
-            return RedirectToAction("ClassDetail", new { id = cls.Id });
+
+            TempData["Success"] = $"Đã tạo lớp '{cls.TenLop}'.";
+            return RedirectToAction("ClassDetail", new { id = cls.LopHocId });
         }
 
         public async Task<IActionResult> ClassDetail(int id)
         {
             if (RequireAdmin() is { } redirect) return redirect;
 
-            var cls = await _db.Classes
-                .Include(c => c.ClassTeachers).ThenInclude(ct => ct.Teacher)
-                .Include(c => c.ClassStudents).ThenInclude(cs => cs.Student)
-                .Include(c => c.Lessons)
-                .Include(c => c.Assignments)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var cls = await _db.LopHocs
+                .Include(c => c.PhanCongGiangDays).ThenInclude(pc => pc.GiangVien)
+                .Include(c => c.SinhVienLops).ThenInclude(svl => svl.SinhVien)
+                .Include(c => c.BaiHocs)
+                .Include(c => c.BaiTaps)
+                .FirstOrDefaultAsync(c => c.LopHocId == id);
 
             if (cls == null) return NotFound();
 
             var vm = new ClassDetailViewModel
             {
-                Class    = cls,
-                Teachers = cls.ClassTeachers.Select(ct => ct.Teacher).ToList(),
-                Students = cls.ClassStudents.Select(cs => cs.Student).ToList(),
-                Lessons  = cls.Lessons.OrderByDescending(l => l.CreatedAt).ToList(),
-                Assignments = cls.Assignments.OrderByDescending(a => a.DueDate).ToList()
+                Class       = cls,
+                Teachers    = cls.PhanCongGiangDays.Select(pc => pc.GiangVien).ToList(),
+                Students    = cls.SinhVienLops.Select(svl => svl.SinhVien).ToList(),
+                Lessons     = cls.BaiHocs.OrderByDescending(l => l.NgayTao).ToList(),
+                Assignments = cls.BaiTaps.OrderByDescending(a => a.NgayTao).ToList()
             };
             return View(vm);
         }
 
-        // Add Teacher to class
+        // Add Teacher to Class
         [HttpGet]
         public async Task<IActionResult> AddTeacher(int classId)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var cls = await _db.Classes.FindAsync(classId);
+            var cls = await _db.LopHocs.FindAsync(classId);
             if (cls == null) return NotFound();
 
-            var alreadyIds = await _db.ClassTeachers
-                .Where(ct => ct.ClassId == classId)
-                .Select(ct => ct.TeacherId)
+            var assignedTeacherIds = await _db.PhanCongGiangDays
+                .Where(pc => pc.LopHocId == classId)
+                .Select(pc => pc.GiangVienId)
+                .ToListAsync();
+
+            var available = await _db.GiangViens
+                .Where(g => !assignedTeacherIds.Contains(g.GiangVienId))
+                .Select(g => new SelectMemberItem
+                {
+                    Id    = g.GiangVienId,
+                    Name  = g.HoTen,
+                    Code  = g.MaGiangVien,
+                    Email = g.Email
+                })
                 .ToListAsync();
 
             var vm = new AddMemberViewModel
             {
-                ClassId       = classId,
-                ClassName     = cls.Name,
-                MemberType    = "Teacher",
-                AvailableUsers = await _db.Users
-                    .Where(u => u.Role == UserRole.Teacher && u.IsActive && !alreadyIds.Contains(u.Id))
-                    .OrderBy(u => u.FullName)
-                    .ToListAsync()
+                ClassId        = classId,
+                ClassName      = $"{cls.MaLop} - {cls.TenLop}",
+                MemberType     = "Teacher",
+                AvailableUsers = available,
+                RoleInClass    = "Giảng viên chính"
             };
             return View("AddMember", vm);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddTeacher(int classId, int selectedUserId)
+        public async Task<IActionResult> AddTeacher(int classId, int selectedUserId, string? roleInClass)
         {
             if (RequireAdmin() is { } redirect) return redirect;
 
-            var exists = await _db.ClassTeachers
-                .AnyAsync(ct => ct.ClassId == classId && ct.TeacherId == selectedUserId);
+            var exists = await _db.PhanCongGiangDays
+                .AnyAsync(pc => pc.LopHocId == classId && pc.GiangVienId == selectedUserId);
+
             if (!exists)
             {
-                _db.ClassTeachers.Add(new ClassTeacher { ClassId = classId, TeacherId = selectedUserId });
+                _db.PhanCongGiangDays.Add(new PhanCongGiangDay
+                {
+                    LopHocId    = classId,
+                    GiangVienId = selectedUserId,
+                    VaiTro      = string.IsNullOrWhiteSpace(roleInClass) ? "Giảng viên chính" : roleInClass.Trim()
+                });
                 await _db.SaveChangesAsync();
-                TempData["Success"] = "Teacher added to class.";
+                TempData["Success"] = "Đã phân công giảng viên vào lớp.";
             }
             return RedirectToAction("ClassDetail", new { id = classId });
         }
@@ -278,35 +350,47 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> RemoveTeacher(int classId, int teacherId)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var ct = await _db.ClassTeachers
-                .FirstOrDefaultAsync(x => x.ClassId == classId && x.TeacherId == teacherId);
-            if (ct != null) { _db.ClassTeachers.Remove(ct); await _db.SaveChangesAsync(); }
-            TempData["Success"] = "Teacher removed from class.";
+            var pc = await _db.PhanCongGiangDays
+                .FirstOrDefaultAsync(x => x.LopHocId == classId && x.GiangVienId == teacherId);
+            if (pc != null)
+            {
+                _db.PhanCongGiangDays.Remove(pc);
+                await _db.SaveChangesAsync();
+                TempData["Success"] = "Đã hủy phân công giảng viên.";
+            }
             return RedirectToAction("ClassDetail", new { id = classId });
         }
 
-        // Add Student to class
+        // Add Student to Class
         [HttpGet]
         public async Task<IActionResult> AddStudent(int classId)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var cls = await _db.Classes.FindAsync(classId);
+            var cls = await _db.LopHocs.FindAsync(classId);
             if (cls == null) return NotFound();
 
-            var alreadyIds = await _db.ClassStudents
-                .Where(cs => cs.ClassId == classId)
-                .Select(cs => cs.StudentId)
+            var enrolledStudentIds = await _db.SinhVienLops
+                .Where(s => s.LopHocId == classId)
+                .Select(s => s.SinhVienId)
+                .ToListAsync();
+
+            var available = await _db.SinhViens
+                .Where(s => !enrolledStudentIds.Contains(s.SinhVienId))
+                .Select(s => new SelectMemberItem
+                {
+                    Id    = s.SinhVienId,
+                    Name  = s.HoTen,
+                    Code  = s.MaSinhVien,
+                    Email = s.Email
+                })
                 .ToListAsync();
 
             var vm = new AddMemberViewModel
             {
-                ClassId       = classId,
-                ClassName     = cls.Name,
-                MemberType    = "Student",
-                AvailableUsers = await _db.Users
-                    .Where(u => u.Role == UserRole.Student && u.IsActive && !alreadyIds.Contains(u.Id))
-                    .OrderBy(u => u.FullName)
-                    .ToListAsync()
+                ClassId        = classId,
+                ClassName      = $"{cls.MaLop} - {cls.TenLop}",
+                MemberType     = "Student",
+                AvailableUsers = available
             };
             return View("AddMember", vm);
         }
@@ -316,13 +400,19 @@ namespace SchoolManagement.Controllers
         {
             if (RequireAdmin() is { } redirect) return redirect;
 
-            var exists = await _db.ClassStudents
-                .AnyAsync(cs => cs.ClassId == classId && cs.StudentId == selectedUserId);
+            var exists = await _db.SinhVienLops
+                .AnyAsync(s => s.LopHocId == classId && s.SinhVienId == selectedUserId);
+
             if (!exists)
             {
-                _db.ClassStudents.Add(new ClassStudent { ClassId = classId, StudentId = selectedUserId });
+                _db.SinhVienLops.Add(new SinhVienLop
+                {
+                    LopHocId   = classId,
+                    SinhVienId = selectedUserId,
+                    NgayVaoLop = DateTime.UtcNow
+                });
                 await _db.SaveChangesAsync();
-                TempData["Success"] = "Student enrolled in class.";
+                TempData["Success"] = "Đã thêm sinh viên vào lớp.";
             }
             return RedirectToAction("ClassDetail", new { id = classId });
         }
@@ -331,10 +421,14 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> RemoveStudent(int classId, int studentId)
         {
             if (RequireAdmin() is { } redirect) return redirect;
-            var cs = await _db.ClassStudents
-                .FirstOrDefaultAsync(x => x.ClassId == classId && x.StudentId == studentId);
-            if (cs != null) { _db.ClassStudents.Remove(cs); await _db.SaveChangesAsync(); }
-            TempData["Success"] = "Student removed from class.";
+            var svl = await _db.SinhVienLops
+                .FirstOrDefaultAsync(x => x.LopHocId == classId && x.SinhVienId == studentId);
+            if (svl != null)
+            {
+                _db.SinhVienLops.Remove(svl);
+                await _db.SaveChangesAsync();
+                TempData["Success"] = "Đã xóa sinh viên khỏi lớp.";
+            }
             return RedirectToAction("ClassDetail", new { id = classId });
         }
 
@@ -346,14 +440,15 @@ namespace SchoolManagement.Controllers
         {
             if (RequireAdmin() is { } redirect) return redirect;
             const int pageSize = 30;
-            var logs = await _db.ActivityLogs
-                .Include(l => l.User)
-                .OrderByDescending(l => l.OccurredAt)
+
+            var logs = await _db.NhatKyDangNhaps
+                .OrderByDescending(l => l.ThoiDiem)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
             ViewBag.Page      = page;
-            ViewBag.TotalLogs = await _db.ActivityLogs.CountAsync();
+            ViewBag.TotalLogs = await _db.NhatKyDangNhaps.CountAsync();
             ViewBag.PageSize  = pageSize;
             return View(logs);
         }

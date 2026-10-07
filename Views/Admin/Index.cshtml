@@ -1,91 +1,235 @@
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Dashboard";
 }
 
-<h4 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h4>
+<!-- ── Welcome Header Banner (White & Blue) ────────────────── -->
+<div class="wb-welcome-banner">
+    <div>
+        <div class="wb-welcome-title">Xin chào, Administrator!</div>
+        <div class="wb-welcome-sub">Hệ thống quản lý học tập và đào tạo SchoolMS đang hoạt động ổn định.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/Admin/CreateUser" class="wb-btn-white">
+            <i class="bi bi-person-plus-fill"></i> Thêm Người Dùng
+        </a>
+        <a href="/Admin/CreateClass" class="wb-btn-white">
+            <i class="bi bi-plus-circle-fill"></i> Tạo Lớp Học
+        </a>
+    </div>
+</div>
 
+<!-- ── 4 Stat Cards in Clean White & Blue ───────────────────── -->
 <div class="row g-3 mb-4">
+    <!-- 1. Total Users -->
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card border-primary p-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-people-fill fs-2 text-primary me-3"></i>
-                <div>
-                    <div class="fs-4 fw-bold">@ViewBag.TotalUsers</div>
-                    <div class="text-muted small">Total Users</div>
-                </div>
+        <div class="wb-stat-card">
+            <div class="wb-stat-icon blue">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="wb-stat-info">
+                <span class="wb-stat-num">@ViewBag.TotalUsers</span>
+                <span class="wb-stat-label">Tổng Người Dùng</span>
             </div>
         </div>
     </div>
+
+    <!-- 2. Classes -->
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card border-success p-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-collection-fill fs-2 text-success me-3"></i>
-                <div>
-                    <div class="fs-4 fw-bold">@ViewBag.TotalClasses</div>
-                    <div class="text-muted small">Classes</div>
-                </div>
+        <div class="wb-stat-card">
+            <div class="wb-stat-icon cyan">
+                <i class="bi bi-collection-fill"></i>
+            </div>
+            <div class="wb-stat-info">
+                <span class="wb-stat-num">@ViewBag.TotalClasses</span>
+                <span class="wb-stat-label">Tổng Lớp Học</span>
             </div>
         </div>
     </div>
+
+    <!-- 3. Teachers -->
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card border-info p-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-person-workspace fs-2 text-info me-3"></i>
-                <div>
-                    <div class="fs-4 fw-bold">@ViewBag.TotalTeachers</div>
-                    <div class="text-muted small">Teachers</div>
-                </div>
+        <div class="wb-stat-card">
+            <div class="wb-stat-icon indigo">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+            <div class="wb-stat-info">
+                <span class="wb-stat-num">@ViewBag.TotalTeachers</span>
+                <span class="wb-stat-label">Giáo Viên</span>
             </div>
         </div>
     </div>
+
+    <!-- 4. Students -->
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card border-warning p-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-person-fill fs-2 text-warning me-3"></i>
-                <div>
-                    <div class="fs-4 fw-bold">@ViewBag.TotalStudents</div>
-                    <div class="text-muted small">Students</div>
-                </div>
+        <div class="wb-stat-card">
+            <div class="wb-stat-icon sky">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <div class="wb-stat-info">
+                <span class="wb-stat-num">@ViewBag.TotalStudents</span>
+                <span class="wb-stat-label">Học Sinh</span>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header fw-semibold"><i class="bi bi-journal-text me-2"></i>Recent Activity Logs</div>
+<!-- ── Middle Section: Role Distribution & Quick Actions ───── -->
+<div class="row g-4 mb-4">
+    <!-- User Breakdown Card -->
+    <div class="col-lg-7">
+        <div class="wb-card h-100 mb-0">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-pie-chart-fill"></i>
+                    <span>Cơ Cấu Người Dùng</span>
+                </div>
+                <a href="/Admin/Users" class="btn-wb-outline">Quản Lý Người Dùng</a>
+            </div>
+
+            @{
+                int totalU = (int)(ViewBag.TotalUsers ?? 1);
+                int students = (int)(ViewBag.TotalStudents ?? 0);
+                int teachers = (int)(ViewBag.TotalTeachers ?? 0);
+                int admins = totalU - students - teachers;
+                if (admins < 0) admins = 1;
+                int studentPct = totalU > 0 ? (students * 100 / totalU) : 0;
+                int teacherPct = totalU > 0 ? (teachers * 100 / totalU) : 0;
+                int adminPct = 100 - studentPct - teacherPct;
+                if (adminPct < 0) adminPct = 0;
+            }
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between small fw-bold mb-2">
+                    <span class="text-primary"><i class="bi bi-mortarboard-fill me-1"></i> Học Sinh (@students)</span>
+                    <span>@studentPct%</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 6px; background-color: #EFF6FF;">
+                    <div class="progress-bar" style="width: @studentPct%; background: #2563EB;"></div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between small fw-bold mb-2">
+                    <span style="color: #4F46E5;"><i class="bi bi-person-workspace me-1"></i> Giáo Viên (@teachers)</span>
+                    <span>@teacherPct%</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 6px; background-color: #EEF2FF;">
+                    <div class="progress-bar" style="width: @teacherPct%; background: #4F46E5;"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="d-flex justify-content-between small fw-bold mb-2">
+                    <span class="text-secondary"><i class="bi bi-shield-check me-1"></i> Quản Trị Viên (@admins)</span>
+                    <span>@adminPct%</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 6px; background-color: #F1F5F9;">
+                    <div class="progress-bar" style="width: @adminPct%; background: #64748B;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Shortcuts Card -->
+    <div class="col-lg-5">
+        <div class="wb-card h-100 mb-0">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    <span>Truy Cập Nhanh</span>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <a href="/Admin/Users" class="d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none" style="background:#F8FAFC; border:1px solid #E2E8F0; color:#0F172A; transition:all .2s;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:36px;height:36px;border-radius:8px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">Danh Sách Người Dùng</div>
+                            <small class="text-muted">Phân quyền, mở khóa và quản lý tài khoản</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+
+                <a href="/Admin/Classes" class="d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none" style="background:#F8FAFC; border:1px solid #E2E8F0; color:#0F172A; transition:all .2s;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:36px;height:36px;border-radius:8px;background:#ECFEFF;color:#0891B2;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">Danh Sách Lớp Học</div>
+                            <small class="text-muted">Gán giáo viên, thêm học sinh vào lớp</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+
+                <a href="/Admin/ActivityLogs" class="d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none" style="background:#F8FAFC; border:1px solid #E2E8F0; color:#0F172A; transition:all .2s;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:36px;height:36px;border-radius:8px;background:#EEF2FF;color:#4F46E5;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">Nhật Ký Bảo Mật</div>
+                            <small class="text-muted">Kiểm tra lịch sử đăng nhập & thao tác</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Recent System Activity Table Card ────────────────────── -->
+<div class="wb-card">
+    <div class="wb-card-header">
+        <div class="wb-card-title">
+            <i class="bi bi-journal-text"></i>
+            <span>Hoạt Động Gần Đây</span>
+        </div>
+        <a href="/Admin/ActivityLogs" class="btn-wb-outline">Xem Tất Cả</a>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
+        <table class="wb-table">
+            <thead>
                 <tr>
-                    <th>Time</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>IP</th>
-                    <th>Result</th>
-                    <th>Details</th>
+                    <th>Thời Gian</th>
+                    <th>Tài Khoản</th>
+                    <th>Hành Động</th>
+                    <th>Địa Chỉ IP</th>
+                    <th>Trạng Thái</th>
+                    <th>Chi Tiết</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var log in (List<SchoolManagement.Models.ActivityLog>)ViewBag.RecentLogs)
+                @if (ViewBag.RecentLogs != null)
                 {
-                    <tr>
-                        <td><small>@log.OccurredAt.ToLocalTime().ToString("dd/MM HH:mm:ss")</small></td>
-                        <td>@(log.Username ?? "-")</td>
-                        <td>@log.Action</td>
-                        <td><small class="text-muted">@(log.IpAddress ?? "-")</small></td>
-                        <td>
-                            @if (log.Success)
-                            {
-                                <span class="badge bg-success">OK</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Fail</span>
-                            }
-                        </td>
-                        <td><small class="text-muted">@log.Details</small></td>
-                    </tr>
+                    @foreach (var log in (List<SchoolManagement.Models.DBNew2026.NhatKyDangNhap>)ViewBag.RecentLogs)
+                    {
+                        <tr>
+                            <td><span class="text-muted small">@log.ThoiDiem.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span></td>
+                            <td><strong>@(log.Email ?? "Hệ thống")</strong></td>
+                            <td><code style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:5px;font-size:0.8rem;">@log.LyDo</code></td>
+                            <td><span class="text-muted font-monospace small">@(log.DiaChiIp ?? "—")</span></td>
+                            <td>
+                                @if (log.ThanhCong)
+                                {
+                                    <span class="wb-badge success"><i class="bi bi-check-circle-fill"></i> Thành công</span>
+                                }
+                                else
+                                {
+                                    <span class="wb-badge failed"><i class="bi bi-x-circle-fill"></i> Thất bại</span>
+                                }
+                            </td>
+                            <td><span class="text-muted small">@(log.ThanhCong ? "Đăng nhập hợp lệ" : log.LyDo)</span></td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>

@@ -1,41 +1,51 @@
 @model SchoolManagement.ViewModels.EditUserViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Edit User";
+    ViewData["Title"] = "Chỉnh Sửa Người Dùng";
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Admin/Users" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-    <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit User</h4>
+    <a href="/Admin/Users" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.3rem;color:#0F172A;">Chỉnh Sửa Người Dùng</h2>
+        <small class="text-muted">Cập nhật thông tin và trạng thái tài khoản</small>
+    </div>
 </div>
 
-<div class="card p-4" style="max-width:560px">
+<div class="wb-card p-4" style="max-width:560px;">
     <form asp-action="EditUser" method="post">
         @Html.AntiForgeryToken()
         <input asp-for="Id" type="hidden" />
-        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+        <div asp-validation-summary="All" class="alert alert-danger py-2" style="border-radius:10px;font-size:0.88rem;"></div>
 
         <div class="mb-3">
-            <label asp-for="FullName" class="form-label fw-semibold"></label>
+            <label asp-for="FullName" class="form-label fw-bold small text-muted"></label>
             <input asp-for="FullName" class="form-control" />
             <span asp-validation-for="FullName" class="text-danger small"></span>
         </div>
+
         <div class="mb-3">
-            <label asp-for="Email" class="form-label fw-semibold"></label>
+            <label asp-for="Email" class="form-label fw-bold small text-muted"></label>
             <input asp-for="Email" class="form-control" type="email" />
             <span asp-validation-for="Email" class="text-danger small"></span>
         </div>
+
         <div class="mb-3">
-            <label asp-for="Role" class="form-label fw-semibold"></label>
-            <select asp-for="Role" asp-items="Html.GetEnumSelectList<SchoolManagement.Models.UserRole>()" class="form-select"></select>
-        </div>
-        <div class="mb-4 form-check">
-            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-            <label asp-for="IsActive" class="form-check-label fw-semibold">Account Active</label>
+            <label asp-for="Role" class="form-label fw-bold small text-muted"></label>
+            <select asp-for="Role" class="form-select">
+                <option value="SinhVien">Sinh Viên (Student)</option>
+                <option value="GiangVien">Giảng Viên (Teacher)</option>
+                <option value="Admin">Quản Trị Viên (Admin)</option>
+            </select>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-check-lg me-1"></i>Save Changes
+        <div class="mb-4 form-check">
+            <input asp-for="IsLocked" class="form-check-input" type="checkbox" id="lockCheck" />
+            <label for="lockCheck" class="form-check-label fw-bold small text-danger">Khóa tài khoản này</label>
+        </div>
+
+        <button type="submit" class="btn-wb-primary w-100 py-2">
+            <i class="bi bi-check2-circle me-1"></i> Lưu Thay Đổi
         </button>
     </form>
 </div>

@@ -1,49 +1,47 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SchoolManagement.Data;
-using SchoolManagement.Models;
+using SchoolManagement.Models.DBNew2026;
+using SchoolManagement.Services;
 using SchoolManagement.ViewModels;
 
 namespace SchoolManagement.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly DBNew2026Context _db;
         private readonly IConfiguration _config;
         private readonly IHttpContextAccessor _http;
 
         private const string SessionUserId   = "UserId";
         private const string SessionUserRole = "UserRole";
         private const string SessionUsername = "Username";
+        private const string SessionFullName = "FullName";
 
-        public AccountController(AppDbContext db, IConfiguration config, IHttpContextAccessor http)
+        public AccountController(DBNew2026Context db, IConfiguration config, IHttpContextAccessor http)
         {
             _db     = db;
             _config = config;
             _http   = http;
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
-
         private int MaxAttempts    => _config.GetValue<int>("Security:MaxFailedLoginAttempts", 5);
         private int LockoutMinutes => _config.GetValue<int>("Security:LockoutMinutes", 15);
 
         private string? GetIp() =>
-            _http.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            _http.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "::1";
 
-        private void LogActivity(int? userId, string? username, string action, bool success, string? details = null)
+        private async Task LogAttemptAsync(int? userId, string email, bool success, string reason)
         {
-            _db.ActivityLogs.Add(new ActivityLog
+            _db.NhatKyDangNhaps.Add(new NhatKyDangNhap
             {
-                UserId    = userId,
-                Username  = username,
-                Action    = action,
-                IpAddress = GetIp(),
-                Success   = success,
-                Details   = details,
-                OccurredAt = DateTime.UtcNow
+                TaiKhoanId = userId,
+                Email      = email,
+                ThanhCong  = success,
+                LyDo       = reason,
+                DiaChiIp   = GetIp(),
+                ThoiDiem   = DateTime.UtcNow
             });
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
         // ── Login ─────────────────────────────────────────────────────────────
@@ -61,73 +59,96 @@ namespace SchoolManagement.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = await _db.Users
-                .FirstOrDefaultAsync(u => u.Username == model.Username);
+            var emailInput = model.Email.Trim();
+            var user = await _db.TaiKhoans
+                .FirstOrDefaultAsync(u => u.Email == emailInput);
 
             if (user == null)
             {
-                LogActivity(null, model.Username, "LoginFailed", false, "User not found");
-                ModelState.AddModelError("", "Invalid username or password.");
+                await LogAttemptAsync(null, emailInput, false, "KhongTonTai");
+                ModelState.AddModelError("", "Email hoặc mật khẩu không chính xác.");
                 return View(model);
             }
 
-            // Check lockout
-            if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
+            // Check permanent lock
+            if (user.BiKhoa)
             {
-                var remaining = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes);
-                LogActivity(user.Id, user.Username, "LoginBlocked", false, $"Account locked for {remaining} more min");
-                ModelState.AddModelError("", $"Account is locked. Try again in {remaining} minute(s).");
+                await LogAttemptAsync(user.TaiKhoanId, emailInput, false, "BiKhoaVinhVien");
+                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
                 return View(model);
             }
 
-            if (!user.IsActive)
+            // Check temporary lockout
+            if (user.KhoaDen.HasValue && user.KhoaDen > DateTime.UtcNow)
             {
-                LogActivity(user.Id, user.Username, "LoginFailed", false, "Account inactive");
-                ModelState.AddModelError("", "Your account has been deactivated. Contact an administrator.");
+                var remaining = (int)Math.Ceiling((user.KhoaDen.Value - DateTime.UtcNow).TotalMinutes);
+                await LogAttemptAsync(user.TaiKhoanId, emailInput, false, "KhoaTamThoi");
+                ModelState.AddModelError("", $"Tài khoản đang bị tạm khóa. Vui lòng thử lại sau {remaining} phút.");
                 return View(model);
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            // Verify password using PBKDF2/BCrypt
+            if (!PasswordHasher.Verify(model.Password, user.MatKhauHash))
             {
-                user.FailedLoginAttempts++;
-                if (user.FailedLoginAttempts >= MaxAttempts)
+                user.SoLanSai++;
+                if (user.SoLanSai >= MaxAttempts)
                 {
-                    user.LockoutEnd = DateTime.UtcNow.AddMinutes(LockoutMinutes);
+                    user.KhoaDen = DateTime.UtcNow.AddMinutes(LockoutMinutes);
                     await _db.SaveChangesAsync();
-                    LogActivity(user.Id, user.Username, "AccountLocked", false,
-                        $"Locked after {MaxAttempts} failed attempts");
-                    ModelState.AddModelError("", $"Too many failed attempts. Account locked for {LockoutMinutes} minutes.");
+                    await LogAttemptAsync(user.TaiKhoanId, emailInput, false, "KhoaTamThoi");
+                    ModelState.AddModelError("", $"Đăng nhập sai quá {MaxAttempts} lần. Tài khoản bị tạm khóa trong {LockoutMinutes} phút.");
                     return View(model);
                 }
 
                 await _db.SaveChangesAsync();
-                LogActivity(user.Id, user.Username, "LoginFailed", false,
-                    $"Wrong password (attempt {user.FailedLoginAttempts}/{MaxAttempts})");
-                ModelState.AddModelError("", $"Invalid username or password. ({user.FailedLoginAttempts}/{MaxAttempts} attempts)");
+                await LogAttemptAsync(user.TaiKhoanId, emailInput, false, "SaiMatKhau");
+                ModelState.AddModelError("", $"Mật khẩu không chính xác. (Sai {user.SoLanSai}/{MaxAttempts} lần)");
                 return View(model);
             }
 
             // Success – reset counters
-            user.FailedLoginAttempts = 0;
-            user.LockoutEnd = null;
+            user.SoLanSai = 0;
+            user.KhoaDen = null;
             await _db.SaveChangesAsync();
 
-            HttpContext.Session.SetInt32(SessionUserId, user.Id);
-            HttpContext.Session.SetString(SessionUserRole, user.Role.ToString());
-            HttpContext.Session.SetString(SessionUsername, user.Username);
+            // Set session
+            HttpContext.Session.SetInt32(SessionUserId, user.TaiKhoanId);
+            HttpContext.Session.SetString(SessionUserRole, user.VaiTro);
+            HttpContext.Session.SetString(SessionUsername, user.Email);
+            HttpContext.Session.SetString(SessionFullName, user.HoTen);
 
-            LogActivity(user.Id, user.Username, "LoginSuccess", true);
+            if (user.VaiTro == "GiangVien")
+            {
+                var gv = await _db.GiangViens.FirstOrDefaultAsync(g => g.TaiKhoanId == user.TaiKhoanId || g.Email == user.Email);
+                if (gv != null)
+                {
+                    HttpContext.Session.SetInt32("GiangVienId", gv.GiangVienId);
+                }
+            }
+            else if (user.VaiTro == "SinhVien")
+            {
+                var sv = await _db.SinhViens.FirstOrDefaultAsync(s => s.TaiKhoanId == user.TaiKhoanId || s.Email == user.Email);
+                if (sv != null)
+                {
+                    HttpContext.Session.SetInt32("SinhVienId", sv.SinhVienId);
+                }
+            }
+
+            await LogAttemptAsync(user.TaiKhoanId, emailInput, true, "ThanhCong");
             return RedirectToDashboard();
         }
 
         // ── Logout ────────────────────────────────────────────────────────────
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            var userId   = HttpContext.Session.GetInt32(SessionUserId);
-            var username = HttpContext.Session.GetString(SessionUsername);
-            LogActivity(userId, username, "Logout", true);
+            var userId = HttpContext.Session.GetInt32(SessionUserId);
+            var email  = HttpContext.Session.GetString(SessionUsername);
+            if (!string.IsNullOrEmpty(email))
+            {
+                await LogAttemptAsync(userId, email, true, "DangXuat");
+            }
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
@@ -139,9 +160,10 @@ namespace SchoolManagement.Controllers
             var role = HttpContext.Session.GetString(SessionUserRole);
             return role switch
             {
-                "Admin"   => RedirectToAction("Index", "Admin"),
-                "Teacher" => RedirectToAction("Index", "Teacher"),
-                _         => RedirectToAction("Index", "Student")
+                "Admin"     => RedirectToAction("Index", "Admin"),
+                "GiangVien" => RedirectToAction("Index", "Teacher"),
+                "SinhVien"  => RedirectToAction("Index", "Student"),
+                _           => RedirectToAction("Index", "Home")
             };
         }
 
@@ -163,29 +185,28 @@ namespace SchoolManagement.Controllers
 
             if (newPassword != confirmPassword)
             {
-                ModelState.AddModelError("", "New passwords do not match.");
+                ModelState.AddModelError("", "Mật khẩu xác nhận không khớp.");
                 return View();
             }
-            if (newPassword.Length < 8)
+            if (newPassword.Length < 6)
             {
-                ModelState.AddModelError("", "Password must be at least 8 characters.");
+                ModelState.AddModelError("", "Mật khẩu mới phải có ít nhất 6 ký tự.");
                 return View();
             }
 
-            var user = await _db.Users.FindAsync(userId.Value);
+            var user = await _db.TaiKhoans.FindAsync(userId.Value);
             if (user == null) return RedirectToAction("Login");
 
-            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            if (!PasswordHasher.Verify(currentPassword, user.MatKhauHash))
             {
-                ModelState.AddModelError("", "Current password is incorrect.");
+                ModelState.AddModelError("", "Mật khẩu hiện tại không chính xác.");
                 return View();
             }
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 11);
+            user.MatKhauHash = PasswordHasher.Hash(newPassword);
             await _db.SaveChangesAsync();
 
-            LogActivity(user.Id, user.Username, "PasswordChanged", true);
-            TempData["Success"] = "Password changed successfully.";
+            TempData["Success"] = "Đổi mật khẩu thành công!";
             return RedirectToDashboard();
         }
     }

@@ -1,62 +1,83 @@
-@model List<SchoolManagement.Models.ApplicationUser>
+@model List<SchoolManagement.Models.DBNew2026.TaiKhoan>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "Quản Lý Người Dùng";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="bi bi-people me-2"></i>User Management</h4>
-    <a href="/Admin/CreateUser" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New User</a>
+    <div>
+        <h2 class="fw-bold mb-1" style="font-size:1.4rem;color:#0F172A;">Quản Lý Người Dùng</h2>
+        <div class="text-muted small">Danh sách và phân quyền tất cả tài khoản trong hệ thống</div>
+    </div>
+    <a href="/Admin/CreateUser" class="btn-wb-primary">
+        <i class="bi bi-person-plus-fill"></i> Thêm Người Dùng Mới
+    </a>
 </div>
 
-<div class="card">
+<div class="wb-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
+        <table class="wb-table">
+            <thead>
                 <tr>
-                    <th>Full Name</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Lockout</th>
-                    <th>Actions</th>
+                    <th>Họ và Tên</th>
+                    <th>Email / Tài Khoản</th>
+                    <th>Vai Trò</th>
+                    <th>Trạng Thái</th>
+                    <th>Khóa Tài Khoản</th>
+                    <th>Thao Tác</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var user in Model)
                 {
                     <tr>
-                        <td class="fw-semibold">@user.FullName</td>
-                        <td><code>@user.Username</code></td>
-                        <td>@user.Email</td>
                         <td>
-                            <span class="badge @(user.Role == SchoolManagement.Models.UserRole.Admin ? "bg-danger" : user.Role == SchoolManagement.Models.UserRole.Teacher ? "bg-primary" : "bg-success")">
-                                @user.Role
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:36px;height:36px;border-radius:50%;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">
+                                    @(user.HoTen?.Length >= 2 ? user.HoTen.Substring(0,2).ToUpper() : "?")
+                                </div>
+                                <span class="fw-bold">@user.HoTen</span>
+                            </div>
+                        </td>
+                        <td><code style="background:#F1F5F9;color:#2563EB;padding:3px 8px;border-radius:6px;font-size:0.85rem;">@user.Email</code></td>
+                        <td>
+                            @{
+                                var badgeClass = user.VaiTro == "Admin" ? "admin" : (user.VaiTro == "GiangVien" ? "teacher" : "student");
+                                var roleName = user.VaiTro == "Admin" ? "Quản Trị Viên" : (user.VaiTro == "GiangVien" ? "Giảng Viên" : "Sinh Viên");
+                            }
+                            <span class="wb-badge @badgeClass">
+                                @roleName
                             </span>
                         </td>
                         <td>
-                            @if (user.IsActive)
+                            @if (!user.BiKhoa)
                             {
-                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                <span class="wb-badge success"><i class="bi bi-check-circle-fill"></i> Hoạt động</span>
                             }
                             else
                             {
-                                <span class="badge bg-secondary"><i class="bi bi-slash-circle me-1"></i>Inactive</span>
+                                <span class="wb-badge" style="background:#FEF2F2;color:#DC2626;"><i class="bi bi-slash-circle"></i> Đã bị khóa</span>
                             }
                         </td>
                         <td>
-                            @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
+                            @if (user.KhoaDen.HasValue && user.KhoaDen > DateTime.UtcNow)
                             {
-                                <span class="badge bg-warning text-dark"><i class="bi bi-lock me-1"></i>Locked</span>
-                                <form method="post" asp-action="UnlockUser" asp-route-id="@user.Id" class="d-inline">
+                                <span class="wb-badge failed"><i class="bi bi-lock-fill"></i> Tạm khóa</span>
+                                <form method="post" asp-action="UnlockUser" asp-route-id="@user.TaiKhoanId" class="d-inline ms-1">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-warning ms-1">Unlock</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Mở khóa</button>
                                 </form>
                             }
-                            else if (user.FailedLoginAttempts > 0)
+                            else if (user.BiKhoa)
                             {
-                                <span class="text-warning small">@user.FailedLoginAttempts failed</span>
+                                <form method="post" asp-action="UnlockUser" asp-route-id="@user.TaiKhoanId" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Mở khóa</button>
+                                </form>
+                            }
+                            else if (user.SoLanSai > 0)
+                            {
+                                <span class="text-warning small fw-bold">@user.SoLanSai lần sai</span>
                             }
                             else
                             {
@@ -64,30 +85,33 @@
                             }
                         </td>
                         <td>
-                            <a href="/Admin/EditUser/@user.Id" class="btn btn-sm btn-outline-primary me-1">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetModal-@user.Id">
-                                <i class="bi bi-key"></i>
-                            </button>
+                            <div class="d-flex gap-2">
+                                <a href="/Admin/EditUser/@user.TaiKhoanId" class="btn-wb-outline py-1 px-2" title="Chỉnh sửa">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button class="btn-wb-outline py-1 px-2" style="color:#D97706;border-color:#FDE68A;" data-bs-toggle="modal" data-bs-target="#resetModal-@user.TaiKhoanId" title="Đặt lại mật khẩu">
+                                    <i class="bi bi-key-fill"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- Reset Password Modal -->
-                    <div class="modal fade" id="resetModal-@user.Id" tabindex="-1">
+                    <div class="modal fade" id="resetModal-@user.TaiKhoanId" tabindex="-1">
                         <div class="modal-dialog modal-sm">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h6 class="modal-title">Reset Password – @user.Username</h6>
+                            <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 12px 36px rgba(0,0,0,0.15);">
+                                <div class="modal-header" style="border-bottom:1.5px solid #E2E8F0;">
+                                    <h6 class="modal-title fw-bold">Đặt lại MK – @user.Email</h6>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form method="post" asp-action="ResetPassword" asp-route-id="@user.Id">
+                                <form method="post" asp-action="ResetPassword" asp-route-id="@user.TaiKhoanId">
                                     @Html.AntiForgeryToken()
                                     <div class="modal-body">
-                                        <input type="password" name="newPassword" class="form-control" placeholder="New password" minlength="8" required />
+                                        <label class="form-label small fw-bold text-muted">Mật khẩu mới</label>
+                                        <input type="password" name="newPassword" class="form-control" placeholder="Tối thiểu 6 ký tự" minlength="6" required />
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-warning btn-sm">Reset</button>
+                                    <div class="modal-footer" style="border-top:1.5px solid #E2E8F0;">
+                                        <button type="submit" class="btn-wb-primary">Xác Nhận</button>
                                     </div>
                                 </form>
                             </div>

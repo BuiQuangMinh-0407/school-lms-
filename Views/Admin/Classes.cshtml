@@ -1,30 +1,42 @@
-@model List<SchoolManagement.Models.Class>
+@model List<SchoolManagement.Models.DBNew2026.LopHoc>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Classes";
+    ViewData["Title"] = "Quản Lý Lớp Học";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="bi bi-collection me-2"></i>Classes</h4>
-    <a href="/Admin/CreateClass" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Class</a>
+    <div>
+        <h2 class="fw-bold mb-1" style="font-size:1.4rem;color:#0F172A;">Quản Lý Lớp Học</h2>
+        <div class="text-muted small">Danh sách tất cả các lớp học và phân công giảng dạy (DBNew2026)</div>
+    </div>
+    <a href="/Admin/CreateClass" class="btn-wb-primary">
+        <i class="bi bi-plus-circle-fill"></i> Tạo Lớp Học Mới
+    </a>
 </div>
 
-<div class="row g-3">
+<div class="row g-4">
     @foreach (var cls in Model)
     {
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">@cls.Name</h5>
-                    <p class="card-text text-muted small">@(cls.Description ?? "No description")</p>
-                    <div class="d-flex gap-3 text-muted small mb-3">
-                        <span><i class="bi bi-person-workspace me-1"></i>@cls.ClassTeachers.Count teacher(s)</span>
-                        <span><i class="bi bi-people me-1"></i>@cls.ClassStudents.Count student(s)</span>
+            <div class="wb-card h-100 d-flex flex-column mb-0" style="padding: 24px;">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="wb-stat-icon blue" style="width:48px;height:48px;font-size:1.3rem;">
+                        <i class="bi bi-book-half"></i>
                     </div>
-                    <a href="/Admin/ClassDetail/@cls.Id" class="btn btn-sm btn-outline-primary w-100">
-                        <i class="bi bi-eye me-1"></i>Manage Class
-                    </a>
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color:#0F172A;font-size:1.05rem;">@cls.TenLop</h5>
+                        <small class="text-muted">Mã lớp: <strong>@cls.MaLop</strong> | HK @cls.HocKy (@cls.NamHoc)</small>
+                    </div>
                 </div>
+
+                <div class="d-flex gap-4 text-muted small mb-4 pb-3" style="border-bottom:1.5px solid #F1F5F9;">
+                    <span><i class="bi bi-person-workspace text-primary me-1"></i><strong>@cls.PhanCongGiangDays.Count</strong> giảng viên</span>
+                    <span><i class="bi bi-people-fill text-success me-1"></i><strong>@cls.SinhVienLops.Count</strong>/@cls.SiSoToiDa sinh viên</span>
+                </div>
+
+                <a href="/Admin/ClassDetail/@cls.LopHocId" class="btn-wb-outline w-100 justify-content-center py-2 mt-auto">
+                    <i class="bi bi-gear-fill me-1"></i> Chi Tiết & Quản Lý
+                </a>
             </div>
         </div>
     }
@@ -32,7 +44,9 @@
     @if (!Model.Any())
     {
         <div class="col-12">
-            <div class="alert alert-info">No classes yet. <a href="/Admin/CreateClass">Create the first class</a>.</div>
+            <div class="alert alert-info" style="border-radius:14px;border:none;background:#EFF6FF;color:#1E40AF;">
+                <i class="bi bi-info-circle-fill me-2"></i> Chưa có lớp học nào trong hệ thống. <a href="/Admin/CreateClass" class="fw-bold text-decoration-underline" style="color:#1D4ED8;">Tạo lớp đầu tiên ngay</a>.
+            </div>
         </div>
     }
 </div>

@@ -1,16 +1,16 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolManagement.Data;
+using SchoolManagement.Models.DBNew2026;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 
-// EF Core with SQL Server LocalDB
-builder.Services.AddDbContext<AppDbContext>(options =>
+// EF Core with SQL Server LocalDB pointing to DBNew2026
+builder.Services.AddDbContext<DBNew2026Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Session for authentication (cookie-based, no ASP.NET Identity dependency)
+// Session for authentication (cookie-based)
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(60);
@@ -40,12 +40,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
-
-// ── Auto-migrate on startup ───────────────────────────────────────────────────
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
 
 app.Run();

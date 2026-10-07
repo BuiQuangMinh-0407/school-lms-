@@ -1,58 +1,80 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SchoolManagement.Data;
-using SchoolManagement.Models;
+using SchoolManagement.Models.DBNew2026;
 using SchoolManagement.ViewModels;
 
 namespace SchoolManagement.Controllers
 {
     public class StudentController : Controller
     {
-        private readonly AppDbContext _db;
-        public StudentController(AppDbContext db) => _db = db;
+        private readonly DBNew2026Context _db;
 
-        private int? CurrentUserId => HttpContext.Session.GetInt32("UserId");
+        public StudentController(DBNew2026Context db) => _db = db;
 
         private IActionResult? RequireStudent()
         {
             var role = HttpContext.Session.GetString("UserRole");
-            if (role != "Student")
+            if (role != "SinhVien")
                 return RedirectToAction("Login", "Account");
             return null;
         }
 
-        /// <summary>Returns true if the student is enrolled in this class.</summary>
+        private async Task<int?> GetCurrentStudentIdAsync()
+        {
+            var cached = HttpContext.Session.GetInt32("SinhVienId");
+            if (cached.HasValue) return cached.Value;
+
+            var uid = HttpContext.Session.GetInt32("UserId");
+            if (!uid.HasValue) return null;
+
+            var sv = await _db.SinhViens.FirstOrDefaultAsync(s => s.TaiKhoanId == uid.Value);
+            if (sv != null)
+            {
+                HttpContext.Session.SetInt32("SinhVienId", sv.SinhVienId);
+                return sv.SinhVienId;
+            }
+            return null;
+        }
+
         private async Task<bool> StudentEnrolledAsync(int classId)
         {
-            var uid = CurrentUserId;
-            if (uid == null) return false;
-            return await _db.ClassStudents
-                .AnyAsync(cs => cs.ClassId == classId && cs.StudentId == uid.Value);
+            var studentId = await GetCurrentStudentIdAsync();
+            if (!studentId.HasValue) return false;
+
+            return await _db.SinhVienLops
+                .AnyAsync(s => s.LopHocId == classId && s.SinhVienId == studentId.Value);
         }
 
         // ════════════════════════════════════════════════════════════════════
-        // Dashboard – list enrolled classes
+        // Dashboard
         // ════════════════════════════════════════════════════════════════════
 
         public async Task<IActionResult> Index()
         {
             if (RequireStudent() is { } r) return r;
-            var uid = CurrentUserId!.Value;
 
-            var classes = await _db.ClassStudents
-                .Where(cs => cs.StudentId == uid)
-                .Include(cs => cs.Class)
-                    .ThenInclude(c => c.Lessons.Where(l => l.IsPublished))
-                .Include(cs => cs.Class)
-                    .ThenInclude(c => c.Assignments)
-                .Select(cs => cs.Class)
-                .OrderBy(c => c.Name)
+            var studentId = await GetCurrentStudentIdAsync();
+            if (!studentId.HasValue)
+            {
+                TempData["Error"] = "Tài khoản chưa được liên kết với hồ sơ sinh viên.";
+                return View(new List<LopHoc>());
+            }
+
+            var classes = await _db.SinhVienLops
+                .Where(s => s.SinhVienId == studentId.Value)
+                .Include(s => s.LopHoc)
+                    .ThenInclude(l => l.BaiHocs.Where(b => b.DaXuatBan))
+                .Include(s => s.LopHoc)
+                    .ThenInclude(l => l.BaiTaps.Where(b => b.DaXuatBan))
+                .Select(s => s.LopHoc)
+                .OrderBy(l => l.TenLop)
                 .ToListAsync();
+
             return View(classes);
         }
 
         // ════════════════════════════════════════════════════════════════════
-        // Class Detail – see published lessons & assignments
+        // Class Detail – strictly published content only
         // ════════════════════════════════════════════════════════════════════
 
         public async Task<IActionResult> ClassDetail(int id)
@@ -60,17 +82,18 @@ namespace SchoolManagement.Controllers
             if (RequireStudent() is { } r) return r;
             if (!await StudentEnrolledAsync(id)) return Forbid();
 
-            var cls = await _db.Classes
-                .Include(c => c.Lessons.Where(l => l.IsPublished))   // Only published!
-                .Include(c => c.Assignments)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var cls = await _db.LopHocs
+                .Include(c => c.BaiHocs.Where(l => l.DaXuatBan))
+                .Include(c => c.BaiTaps.Where(a => a.DaXuatBan))
+                .FirstOrDefaultAsync(c => c.LopHocId == id);
+
             if (cls == null) return NotFound();
 
             var vm = new ClassDetailViewModel
             {
                 Class       = cls,
-                Lessons     = cls.Lessons.OrderByDescending(l => l.PublishedAt).ToList(),
-                Assignments = cls.Assignments.OrderBy(a => a.DueDate).ToList()
+                Lessons     = cls.BaiHocs.OrderByDescending(l => l.NgayXuatBan ?? l.NgayTao).ToList(),
+                Assignments = cls.BaiTaps.OrderBy(a => a.HanNop).ToList()
             };
             return View(vm);
         }
@@ -82,41 +105,45 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> ViewLesson(int id)
         {
             if (RequireStudent() is { } r) return r;
-            var lesson = await _db.Lessons
-                .Include(l => l.Class)
-                .Include(l => l.Teacher)
-                .FirstOrDefaultAsync(l => l.Id == id && l.IsPublished);
+
+            var lesson = await _db.BaiHocs
+                .Include(l => l.LopHoc)
+                .FirstOrDefaultAsync(l => l.BaiHocId == id && l.DaXuatBan);
+
             if (lesson == null) return NotFound();
-            if (!await StudentEnrolledAsync(lesson.ClassId)) return Forbid();
+            if (!await StudentEnrolledAsync(lesson.LopHocId)) return Forbid();
+
             return View(lesson);
         }
 
         // ════════════════════════════════════════════════════════════════════
-        // Assignments & Submissions
+        // Assignment View & Submission
         // ════════════════════════════════════════════════════════════════════
 
         public async Task<IActionResult> ViewAssignment(int id)
         {
             if (RequireStudent() is { } r) return r;
-            var uid = CurrentUserId!.Value;
 
-            var assignment = await _db.Assignments
-                .Include(a => a.Class)
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var studentId = await GetCurrentStudentIdAsync();
+            if (!studentId.HasValue) return Forbid();
+
+            var assignment = await _db.BaiTaps
+                .Include(a => a.LopHoc)
+                .FirstOrDefaultAsync(a => a.BaiTapId == id && a.DaXuatBan);
+
             if (assignment == null) return NotFound();
-            if (!await StudentEnrolledAsync(assignment.ClassId)) return Forbid();
+            if (!await StudentEnrolledAsync(assignment.LopHocId)) return Forbid();
 
-            // Check if student already submitted
-            var existingSub = await _db.AssignmentSubmissions
-                .FirstOrDefaultAsync(s => s.AssignmentId == id && s.StudentId == uid);
+            var existingSub = await _db.BaiNops
+                .FirstOrDefaultAsync(s => s.BaiTapId == id && s.SinhVienId == studentId.Value);
 
             var vm = new SubmitAssignmentViewModel
             {
-                AssignmentId          = assignment.Id,
-                AssignmentTitle       = assignment.Title,
-                AssignmentDescription = assignment.Description,
-                DueDate               = assignment.DueDate,
-                SubmissionContent     = existingSub?.SubmissionContent ?? string.Empty
+                AssignmentId          = assignment.BaiTapId,
+                AssignmentTitle       = assignment.TieuDe,
+                AssignmentDescription = assignment.MoTa,
+                DueDate               = assignment.HanNop,
+                SubmissionContent     = existingSub?.NoiDung ?? string.Empty
             };
 
             ViewBag.ExistingSubmission = existingSub;
@@ -127,38 +154,46 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> SubmitAssignment(SubmitAssignmentViewModel model)
         {
             if (RequireStudent() is { } r) return r;
-            var uid = CurrentUserId!.Value;
 
-            var assignment = await _db.Assignments.FindAsync(model.AssignmentId);
-            if (assignment == null) return NotFound();
-            if (!await StudentEnrolledAsync(assignment.ClassId)) return Forbid();
-            if (!ModelState.IsValid) return View("ViewAssignment", model);
+            var studentId = await GetCurrentStudentIdAsync();
+            if (!studentId.HasValue) return Forbid();
 
-            var existing = await _db.AssignmentSubmissions
-                .FirstOrDefaultAsync(s => s.AssignmentId == model.AssignmentId && s.StudentId == uid);
+            var assignment = await _db.BaiTaps.FindAsync(model.AssignmentId);
+            if (assignment == null || !assignment.DaXuatBan) return NotFound();
+            if (!await StudentEnrolledAsync(assignment.LopHocId)) return Forbid();
+
+            if (!ModelState.IsValid)
+            {
+                var existingSub = await _db.BaiNops
+                    .FirstOrDefaultAsync(s => s.BaiTapId == model.AssignmentId && s.SinhVienId == studentId.Value);
+                ViewBag.ExistingSubmission = existingSub;
+                return View("ViewAssignment", model);
+            }
+
+            var existing = await _db.BaiNops
+                .FirstOrDefaultAsync(s => s.BaiTapId == model.AssignmentId && s.SinhVienId == studentId.Value);
 
             if (existing != null)
             {
-                // Update existing submission (re-submit)
-                existing.SubmissionContent = model.SubmissionContent;
-                existing.SubmittedAt       = DateTime.UtcNow;
-                existing.Grade             = null;  // Reset grade on re-submit
-                existing.Feedback          = null;
-                existing.GradedAt          = null;
+                existing.NoiDung = model.SubmissionContent.Trim();
+                existing.NgayNop = DateTime.UtcNow;
+                existing.Diem    = null;
+                existing.NhanXet = null;
             }
             else
             {
-                _db.AssignmentSubmissions.Add(new AssignmentSubmission
+                _db.BaiNops.Add(new BaiNop
                 {
-                    AssignmentId      = model.AssignmentId,
-                    StudentId         = uid,
-                    SubmissionContent = model.SubmissionContent
+                    BaiTapId   = model.AssignmentId,
+                    SinhVienId = studentId.Value,
+                    NoiDung    = model.SubmissionContent.Trim(),
+                    NgayNop    = DateTime.UtcNow
                 });
             }
 
             await _db.SaveChangesAsync();
-            TempData["Success"] = "Assignment submitted successfully!";
-            return RedirectToAction("ClassDetail", new { id = assignment.ClassId });
+            TempData["Success"] = "Nộp bài thành công!";
+            return RedirectToAction("ClassDetail", new { id = assignment.LopHocId });
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -168,14 +203,17 @@ namespace SchoolManagement.Controllers
         public async Task<IActionResult> MyGrades()
         {
             if (RequireStudent() is { } r) return r;
-            var uid = CurrentUserId!.Value;
 
-            var submissions = await _db.AssignmentSubmissions
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Class)
-                .Where(s => s.StudentId == uid && s.Grade != null)
-                .OrderByDescending(s => s.GradedAt)
+            var studentId = await GetCurrentStudentIdAsync();
+            if (!studentId.HasValue) return View(new List<BaiNop>());
+
+            var submissions = await _db.BaiNops
+                .Include(s => s.BaiTap)
+                    .ThenInclude(a => a.LopHoc)
+                .Where(s => s.SinhVienId == studentId.Value && s.Diem != null)
+                .OrderByDescending(s => s.NgayNop)
                 .ToListAsync();
+
             return View(submissions);
         }
     }

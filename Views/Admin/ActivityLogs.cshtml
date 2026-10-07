@@ -1,62 +1,83 @@
-@model List<SchoolManagement.Models.ActivityLog>
+@model List<SchoolManagement.Models.DBNew2026.NhatKyDangNhap>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Activity Logs";
-    int page     = (int)ViewBag.Page;
-    int total    = (int)ViewBag.TotalLogs;
-    int pageSize = (int)ViewBag.PageSize;
-    int totalPages = (int)Math.Ceiling((double)total / pageSize);
+    ViewData["Title"] = "Nhật Ký Đăng Nhập";
+    int currentPage = (int)ViewBag.Page;
+    int total       = (int)ViewBag.TotalLogs;
+    int pageSize    = (int)ViewBag.PageSize;
+    int totalPages  = (int)Math.Ceiling((double)total / pageSize);
 }
 
-<h4 class="mb-4"><i class="bi bi-journal-text me-2"></i>Activity Logs</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1" style="font-size:1.4rem;color:#0F172A;">Nhật Ký Đăng Nhập (NhatKyDangNhap)</h2>
+        <div class="text-muted small">Ghi nhận mọi lần đăng nhập thành công và thất bại theo yêu cầu bảo mật</div>
+    </div>
+    <div class="text-muted small">
+        <i class="bi bi-database me-1"></i>Tổng cộng: <strong>@total</strong> bản ghi
+    </div>
+</div>
 
-<div class="card">
+<div class="wb-card">
     <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-            <thead class="table-dark">
+        <table class="wb-table">
+            <thead>
                 <tr>
-                    <th>Time (Local)</th>
-                    <th>Username</th>
-                    <th>Action</th>
-                    <th>IP Address</th>
-                    <th>Result</th>
-                    <th>Details</th>
+                    <th>Thời Điểm</th>
+                    <th>Email Tài Khoản</th>
+                    <th>Trạng Thái</th>
+                    <th>Lý Do / Sự Kiện</th>
+                    <th>Địa Chỉ IP</th>
+                    <th>Mã Tài Khoản</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var log in Model)
                 {
-                    <tr class="@(log.Success ? "" : "table-danger")">
-                        <td><small>@log.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</small></td>
-                        <td>@(log.Username ?? "<unknown>")</td>
-                        <td>@log.Action</td>
-                        <td><small class="font-monospace">@(log.IpAddress ?? "-")</small></td>
+                    <tr>
+                        <td><span class="text-muted small">@log.ThoiDiem.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</span></td>
+                        <td><strong>@log.Email</strong></td>
                         <td>
-                            @if (log.Success)
-                            { <span class="badge bg-success">Success</span> }
+                            @if (log.ThanhCong)
+                            {
+                                <span class="wb-badge success"><i class="bi bi-check-circle-fill"></i> Thành công</span>
+                            }
                             else
-                            { <span class="badge bg-danger">Failed</span> }
+                            {
+                                <span class="wb-badge failed"><i class="bi bi-x-circle-fill"></i> Thất bại</span>
+                            }
                         </td>
-                        <td><small>@log.Details</small></td>
+                        <td>
+                            <code style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:6px;font-size:0.85rem;">
+                                @log.LyDo
+                            </code>
+                        </td>
+                        <td><span class="text-muted font-monospace small">@(log.DiaChiIp ?? "—")</span></td>
+                        <td><span class="text-muted small">@(log.TaiKhoanId.HasValue ? $"#{log.TaiKhoanId}" : "—")</span></td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 
-    <div class="card-footer d-flex justify-content-between align-items-center">
-        <small class="text-muted">Showing page @(page) of @(totalPages) (@(total) total entries)</small>
-        <div class="btn-group btn-group-sm">
-            @if (page > 1)
+    <!-- Pagination -->
+    @{
+        var prevPage = currentPage - 1;
+        var nextPage = currentPage + 1;
+    }
+    <div class="p-3 border-top d-flex justify-content-between align-items-center">
+        <small class="text-muted">Trang @currentPage / @(totalPages == 0 ? 1 : totalPages)</small>
+        <div class="d-flex gap-2">
+            @if (currentPage > 1)
             {
-                <a href="/Admin/ActivityLogs?page=@(page - 1)" class="btn btn-outline-secondary">
-                    <i class="bi bi-chevron-left"></i> Prev
+                <a href="/Admin/ActivityLogs?page=@prevPage" class="btn-wb-outline py-1 px-3">
+                    <i class="bi bi-chevron-left"></i> Trang trước
                 </a>
             }
-            @if (page < totalPages)
+            @if (currentPage < totalPages)
             {
-                <a href="/Admin/ActivityLogs?page=@(page + 1)" class="btn btn-outline-secondary">
-                    Next <i class="bi bi-chevron-right"></i>
+                <a href="/Admin/ActivityLogs?page=@nextPage" class="btn-wb-outline py-1 px-3">
+                    Trang sau <i class="bi bi-chevron-right"></i>
                 </a>
             }
         </div>

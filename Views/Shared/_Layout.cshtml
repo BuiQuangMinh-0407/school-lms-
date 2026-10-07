@@ -1,92 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light" style="color-scheme: light !important;">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] – School Management</title>
+    <title>@ViewData["Title"] – SchoolMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <style>
-        body { background: #f4f6f9; }
-        .sidebar { min-height: 100vh; background: #1a1a2e; color: #ccc; }
-        .sidebar a { color: #ccc; text-decoration: none; padding: 10px 20px; display: block; border-radius: 6px; margin: 2px 8px; transition: background .2s; }
-        .sidebar a:hover, .sidebar a.active { background: #0f3460; color: #fff; }
-        .sidebar .brand { font-size: 1.2rem; font-weight: 700; color: #e94560; padding: 20px; border-bottom: 1px solid #333; }
-        .nav-label { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; color: #666; padding: 14px 20px 4px; }
-        .main-content { padding: 30px; }
-        .card { border: none; box-shadow: 0 1px 6px rgba(0,0,0,.08); border-radius: 12px; }
-        .stat-card { border-left: 4px solid; }
-        .badge-admin { background: #dc3545; }
-        .badge-teacher { background: #0d6efd; }
-        .badge-student { background: #198754; }
-    </style>
+    <link rel="stylesheet" href="~/css/lms-theme.css" />
 </head>
-<body>
-<div class="d-flex">
+<body data-bs-theme="light" style="color-scheme: light !important; background-color: #F1F5F9 !important;">
+<div class="lms-layout">
+
     @if (Context.Session.GetInt32("UserId") != null)
     {
-        <div class="sidebar d-flex flex-column" style="width:220px;min-width:220px">
-            <div class="brand"><i class="bi bi-mortarboard-fill me-2"></i>SchoolMS</div>
+        var role  = Context.Session.GetString("UserRole");
+        var uname = Context.Session.GetString("Username") ?? "User";
+        var initials = uname.Length >= 2 ? uname.Substring(0,2).ToUpper() : uname.ToUpper();
+        var currentPath = Context.Request.Path.Value ?? "";
 
-            @{
-                var role = Context.Session.GetString("UserRole");
-                var uname = Context.Session.GetString("Username");
-            }
+        <!-- ── SIDEBAR (Clean White & Blue Theme) ──────────────── -->
+        <aside class="lms-sidebar">
+            <!-- Brand -->
+            <div class="lms-brand">
+                <div class="lms-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="lms-brand-text">
+                    <span class="lms-brand-name">SchoolMS</span>
+                    <span class="lms-brand-desc">LMS Platform</span>
+                </div>
+            </div>
 
-            @if (role == "Admin")
-            {
-                <span class="nav-label">Admin</span>
-                <a href="/Admin/Index"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-                <a href="/Admin/Users"><i class="bi bi-people me-2"></i>Users</a>
-                <a href="/Admin/Classes"><i class="bi bi-collection me-2"></i>Classes</a>
-                <a href="/Admin/ActivityLogs"><i class="bi bi-journal-text me-2"></i>Activity Logs</a>
-            }
-            else if (role == "Teacher")
-            {
-                <span class="nav-label">Teacher</span>
-                <a href="/Teacher/Index"><i class="bi bi-speedometer2 me-2"></i>My Classes</a>
-            }
-            else
-            {
-                <span class="nav-label">Student</span>
-                <a href="/Student/Index"><i class="bi bi-speedometer2 me-2"></i>My Classes</a>
-                <a href="/Student/MyGrades"><i class="bi bi-patch-check me-2"></i>My Grades</a>
-            }
+            <!-- Navigation Links -->
+            <nav class="lms-nav">
+                @if (role == "Admin")
+                {
+                    <span class="lms-nav-header">Quản Trị</span>
+                    <a href="/Admin/Index" class="lms-nav-item @(currentPath == "/Admin/Index" || currentPath == "/" ? "active" : "")">
+                        <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+                    </a>
+                    <a href="/Admin/Users" class="lms-nav-item @(currentPath.StartsWith("/Admin/Users") || currentPath.StartsWith("/Admin/CreateUser") || currentPath.StartsWith("/Admin/EditUser") ? "active" : "")">
+                        <i class="bi bi-people-fill"></i><span>Người Dùng</span>
+                    </a>
+                    <a href="/Admin/Classes" class="lms-nav-item @(currentPath.StartsWith("/Admin/Classes") || currentPath.StartsWith("/Admin/ClassDetail") ? "active" : "")">
+                        <i class="bi bi-book-half"></i><span>Lớp Học</span>
+                    </a>
 
-            <span class="nav-label">Account</span>
-            <a href="/Account/ChangePassword"><i class="bi bi-key me-2"></i>Change Password</a>
+                    <span class="lms-nav-header">Giám Sát</span>
+                    <a href="/Admin/ActivityLogs" class="lms-nav-item @(currentPath.StartsWith("/Admin/ActivityLogs") ? "active" : "")">
+                        <i class="bi bi-journal-text"></i><span>Nhật Ký Hoạt Động</span>
+                    </a>
+                }
+                else if (role == "Teacher" || role == "GiangVien")
+                {
+                    <span class="lms-nav-header">Giảng Dạy</span>
+                    <a href="/Teacher/Index" class="lms-nav-item @(currentPath == "/Teacher/Index" || currentPath == "/" ? "active" : "")">
+                        <i class="bi bi-book-half"></i><span>Lớp Dạy Của Tôi</span>
+                    </a>
+                }
+                else
+                {
+                    <span class="lms-nav-header">Học Tập</span>
+                    <a href="/Student/Index" class="lms-nav-item @(currentPath == "/Student/Index" || currentPath == "/" ? "active" : "")">
+                        <i class="bi bi-book-half"></i><span>Lớp Học Của Tôi</span>
+                    </a>
+                    <a href="/Student/MyGrades" class="lms-nav-item @(currentPath == "/Student/MyGrades" ? "active" : "")">
+                        <i class="bi bi-patch-check-fill"></i><span>Bảng Điểm</span>
+                    </a>
+                }
 
-            <div class="mt-auto p-3 border-top border-secondary">
-                <small class="text-muted d-block">Logged in as</small>
-                <strong class="text-white">@uname</strong>
-                <span class="badge ms-1 @(role == "Admin" ? "badge-admin" : role == "Teacher" ? "badge-teacher" : "badge-student")">@role</span>
-                <form method="post" action="/Account/Logout" class="mt-2">
+                <span class="lms-nav-header">Tài Khoản</span>
+                <a href="/Account/ChangePassword" class="lms-nav-item @(currentPath == "/Account/ChangePassword" ? "active" : "")">
+                    <i class="bi bi-shield-lock-fill"></i><span>Đổi Mật Khẩu</span>
+                </a>
+            </nav>
+
+            <!-- User Footer -->
+            <div class="lms-sidebar-footer">
+                <div class="lms-user-card">
+                    <div class="lms-user-avatar">@initials</div>
+                    <div class="lms-user-meta">
+                        <div class="lms-user-name">@uname</div>
+                        <span class="lms-user-badge">@role</span>
+                    </div>
+                </div>
+                <form method="post" action="/Account/Logout">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
-                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    <button type="submit" class="lms-btn-logout">
+                        <i class="bi bi-box-arrow-right"></i> Đăng Xuất
                     </button>
                 </form>
             </div>
-        </div>
+        </aside>
     }
 
-    <div class="flex-grow-1 main-content">
-        @if (TempData["Success"] != null)
+    <!-- ── MAIN VIEWPORT ────────────────────────────────────── -->
+    <div class="lms-main">
+        @if (Context.Session.GetInt32("UserId") != null)
         {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <header class="lms-topbar">
+                <div class="lms-topbar-left">
+                    <h1 class="lms-topbar-title mb-0">@(ViewData["Title"] ?? "Dashboard")</h1>
+                </div>
+                <div class="lms-topbar-right">
+                    <button class="lms-icon-btn" title="Thông báo">
+                        <i class="bi bi-bell"></i>
+                    </button>
+                    <a href="/Account/ChangePassword" class="lms-icon-btn" title="Cài đặt">
+                        <i class="bi bi-gear"></i>
+                    </a>
+                </div>
+            </header>
         }
 
-        @RenderBody()
+        <!-- Alerts -->
+        <div class="lms-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius:12px;border:none;background:#ECFDF5;color:#065F46;">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius:12px;border:none;background:#FEF2F2;color:#991B1B;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </div>
     </div>
 </div>
 

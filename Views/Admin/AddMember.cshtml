@@ -1,21 +1,25 @@
 @model SchoolManagement.ViewModels.AddMemberViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Add " + Model.MemberType;
+    var memberTitle = Model.MemberType == "Teacher" ? "Giảng Viên" : "Sinh Viên";
+    ViewData["Title"] = "Thêm " + memberTitle;
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Admin/ClassDetail/@Model.ClassId" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-    <h4 class="mb-0">Add @Model.MemberType to <em>@Model.ClassName</em></h4>
+    <a href="/Admin/ClassDetail/@Model.ClassId" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.3rem;color:#0F172A;">Thêm @memberTitle vào lớp</h2>
+        <small class="text-muted">Lớp học: <strong>@Model.ClassName</strong></small>
+    </div>
 </div>
 
-<div class="card p-4" style="max-width:480px">
+<div class="wb-card p-4" style="max-width:520px;">
     @if (!Model.AvailableUsers.Any())
     {
-        <div class="alert alert-warning">
-            No available @Model.MemberType.ToLower()s to add. All @Model.MemberType.ToLower()s are already assigned.
+        <div class="alert alert-warning" style="border-radius:12px;border:none;">
+            Tất cả @memberTitle.ToLower() hiện tại đều đã được thêm vào lớp này hoặc chưa có hồ sơ tương ứng.
         </div>
-        <a href="/Admin/ClassDetail/@Model.ClassId" class="btn btn-secondary">Back</a>
+        <a href="/Admin/ClassDetail/@Model.ClassId" class="btn-wb-outline">Quay Lại</a>
     }
     else
     {
@@ -23,18 +27,30 @@
         <form method="post" asp-action="@action" asp-route-classId="@Model.ClassId">
             @Html.AntiForgeryToken()
 
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Select @Model.MemberType</label>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Chọn @memberTitle</label>
                 <select name="selectedUserId" class="form-select">
                     @foreach (var u in Model.AvailableUsers)
                     {
-                        <option value="@u.Id">@u.FullName (@u.Username)</option>
+                        <option value="@u.Id">@u.Name - [@u.Code] (@u.Email)</option>
                     }
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-plus-lg me-1"></i>Add @Model.MemberType
+            @if (Model.MemberType == "Teacher")
+            {
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted">Vai Trò Giảng Dạy</label>
+                    <select name="roleInClass" class="form-select">
+                        <option value="Giảng viên chính">Giảng viên chính</option>
+                        <option value="Giảng viên thực hành">Giảng viên thực hành</option>
+                        <option value="Trợ giảng">Trợ giảng</option>
+                    </select>
+                </div>
+            }
+
+            <button type="submit" class="btn-wb-primary w-100 py-2">
+                <i class="bi bi-person-plus-fill me-1"></i> Xác Nhận Thêm
             </button>
         </form>
     }

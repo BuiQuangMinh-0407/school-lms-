@@ -1,44 +1,57 @@
 @model SchoolManagement.ViewModels.ClassDetailViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Class: " + Model.Class.Name;
+    ViewData["Title"] = "Lớp: " + Model.Class.TenLop;
 }
 
-<div class="d-flex align-items-center mb-4">
-    <a href="/Admin/Classes" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-    <div>
-        <h4 class="mb-0">@Model.Class.Name</h4>
-        <small class="text-muted">@Model.Class.Description</small>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center">
+        <a href="/Admin/Classes" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        <div>
+            <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:#0F172A;">@Model.Class.TenLop</h2>
+            <small class="text-muted">Mã: <strong>@Model.Class.MaLop</strong> | HK @Model.Class.HocKy (@Model.Class.NamHoc) | Sĩ số tối đa: @Model.Class.SiSoToiDa</small>
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
     <!-- Teachers -->
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-person-workspace me-2"></i>Teachers</span>
-                <a href="/Admin/AddTeacher/@Model.Class.Id" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus"></i> Add
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-person-workspace text-primary"></i>
+                    <span>Giảng Viên Phụ Trách (@Model.Teachers.Count)</span>
+                </div>
+                <a href="/Admin/AddTeacher?classId=@Model.Class.LopHocId" class="btn-wb-outline" style="font-size:0.8rem;padding:4px 10px;">
+                    <i class="bi bi-plus-lg"></i> Phân Công
                 </a>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var t in Model.Teachers)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-person me-2 text-primary"></i>@t.FullName</span>
-                        <form method="post" asp-action="RemoveTeacher" asp-route-classId="@Model.Class.Id" asp-route-teacherId="@t.Id">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;">
+                                GV
+                            </div>
+                            <div>
+                                <span class="fw-bold">@t.HoTen</span>
+                                <small class="text-muted d-block font-monospace">@t.MaGiangVien - @t.Email</small>
+                            </div>
+                        </div>
+                        <form method="post" asp-action="RemoveTeacher" asp-route-classId="@Model.Class.LopHocId" asp-route-teacherId="@t.GiangVienId">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Remove this teacher?')">
-                                <i class="bi bi-x"></i>
+                                onclick="return confirm('Hủy phân công giảng viên này?')" title="Hủy phân công">
+                                <i class="bi bi-x-lg"></i>
                             </button>
                         </form>
                     </li>
                 }
                 @if (!Model.Teachers.Any())
                 {
-                    <li class="list-group-item text-muted">No teachers assigned.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có giảng viên nào được phân công.</li>
                 }
             </ul>
         </div>
@@ -46,30 +59,41 @@
 
     <!-- Students -->
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-people me-2"></i>Students</span>
-                <a href="/Admin/AddStudent/@Model.Class.Id" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-plus"></i> Enroll
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-people-fill text-success"></i>
+                    <span>Sinh Viên Trong Lớp (@Model.Students.Count)</span>
+                </div>
+                <a href="/Admin/AddStudent?classId=@Model.Class.LopHocId" class="btn-wb-outline" style="font-size:0.8rem;padding:4px 10px;">
+                    <i class="bi bi-plus-lg"></i> Thêm SV
                 </a>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var s in Model.Students)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-person me-2 text-success"></i>@s.FullName</span>
-                        <form method="post" asp-action="RemoveStudent" asp-route-classId="@Model.Class.Id" asp-route-studentId="@s.Id">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#ECFDF5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;">
+                                SV
+                            </div>
+                            <div>
+                                <span class="fw-bold">@s.HoTen</span>
+                                <small class="text-muted d-block font-monospace">@s.MaSinhVien - @s.Email</small>
+                            </div>
+                        </div>
+                        <form method="post" asp-action="RemoveStudent" asp-route-classId="@Model.Class.LopHocId" asp-route-studentId="@s.SinhVienId">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Remove this student?')">
-                                <i class="bi bi-x"></i>
+                                onclick="return confirm('Xóa sinh viên khỏi lớp?')" title="Xóa sinh viên">
+                                <i class="bi bi-x-lg"></i>
                             </button>
                         </form>
                     </li>
                 }
                 @if (!Model.Students.Any())
                 {
-                    <li class="list-group-item text-muted">No students enrolled.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có sinh viên nào trong lớp.</li>
                 }
             </ul>
         </div>
@@ -77,21 +101,26 @@
 
     <!-- Lessons overview -->
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-journal-richtext me-2"></i>Lessons (@Model.Lessons.Count)</div>
+        <div class="wb-card">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-journal-richtext text-info"></i>
+                    <span>Bài Học (@Model.Lessons.Count)</span>
+                </div>
+            </div>
             <ul class="list-group list-group-flush">
                 @foreach (var l in Model.Lessons)
                 {
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>@l.Title</span>
-                        <span class="badge @(l.IsPublished ? "bg-success" : "bg-secondary")">
-                            @(l.IsPublished ? "Published" : "Draft")
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>@l.TieuDe</span>
+                        <span class="wb-badge @(l.DaXuatBan ? "success" : "")" style="@(l.DaXuatBan ? "" : "background:#F1F5F9;color:#64748B;")">
+                            @(l.DaXuatBan ? "Đã xuất bản" : "Bản nháp")
                         </span>
                     </li>
                 }
                 @if (!Model.Lessons.Any())
                 {
-                    <li class="list-group-item text-muted">No lessons yet.</li>
+                    <li class="list-group-item text-muted text-center py-3">Chưa có bài học nào.</li>
                 }
             </ul>
         </div>
@@ -99,19 +128,24 @@
 
     <!-- Assignments overview -->
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-clipboard-check me-2"></i>Assignments (@Model.Assignments.Count)</div>
+        <div class="wb-card">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-clipboard-check text-warning"></i>
+                    <span>Bài Tập (@Model.Assignments.Count)</span>
+                </div>
+            </div>
             <ul class="list-group list-group-flush">
                 @foreach (var a in Model.Assignments)
                 {
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>@a.Title</span>
-                        <small class="text-muted">Due @a.DueDate.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>@a.TieuDe</span>
+                        <small class="text-muted">Hạn nộp: @(a.HanNop?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Không có")</small>
                     </li>
                 }
                 @if (!Model.Assignments.Any())
                 {
-                    <li class="list-group-item text-muted">No assignments yet.</li>
+                    <li class="list-group-item text-muted text-center py-3">Chưa có bài tập nào.</li>
                 }
             </ul>
         </div>

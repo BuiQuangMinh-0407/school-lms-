@@ -1,40 +1,43 @@
 @model SchoolManagement.ViewModels.ClassDetailViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = Model.Class.Name;
+    ViewData["Title"] = Model.Class.TenLop;
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Student/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <a href="/Student/Index" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
     <div>
-        <h4 class="mb-0">@Model.Class.Name</h4>
-        <small class="text-muted">@Model.Class.Description</small>
+        <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:#0F172A;">@Model.Class.TenLop</h2>
+        <small class="text-muted">Mã: <strong>@Model.Class.MaLop</strong> | HK @Model.Class.HocKy (@Model.Class.NamHoc)</small>
     </div>
 </div>
 
 <div class="row g-4">
     <!-- Published Lessons -->
     <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header fw-semibold">
-                <i class="bi bi-journal-richtext me-2"></i>Lessons
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-journal-richtext text-primary"></i>
+                    <span>Tài Liệu & Bài Học Đã Xuất Bản</span>
+                </div>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var l in Model.Lessons)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <div class="fw-semibold">@l.Title</div>
-                            <small class="text-muted">Published @l.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                            <div class="fw-bold" style="color:#0F172A;">@l.TieuDe</div>
+                            <small class="text-muted">Ngày đăng: @((l.NgayXuatBan ?? l.NgayTao).ToLocalTime().ToString("dd/MM/yyyy"))</small>
                         </div>
-                        <a href="/Student/ViewLesson/@l.Id" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-book me-1"></i>Read
+                        <a href="/Student/ViewLesson/@l.BaiHocId" class="btn-wb-outline py-1 px-3" style="font-size:0.85rem;">
+                            <i class="bi bi-book me-1"></i> Xem Bài
                         </a>
                     </li>
                 }
                 @if (!Model.Lessons.Any())
                 {
-                    <li class="list-group-item text-muted">No lessons published yet.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có bài học nào được giảng viên xuất bản.</li>
                 }
             </ul>
         </div>
@@ -42,30 +45,33 @@
 
     <!-- Assignments -->
     <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header fw-semibold">
-                <i class="bi bi-clipboard-check me-2"></i>Assignments
+        <div class="wb-card h-100">
+            <div class="wb-card-header">
+                <div class="wb-card-title">
+                    <i class="bi bi-clipboard-check text-success"></i>
+                    <span>Bài Tập & Yêu Cầu Nộp Bài</span>
+                </div>
             </div>
             <ul class="list-group list-group-flush">
                 @foreach (var a in Model.Assignments)
                 {
-                    var isPastDue = a.DueDate < DateTime.UtcNow;
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    var isPastDue = a.HanNop.HasValue && a.HanNop.Value < DateTime.UtcNow;
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <div class="fw-semibold">@a.Title</div>
-                            <small class="@(isPastDue ? "text-danger" : "text-muted")">
-                                Due @a.DueDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                                @if (isPastDue) { <span>(overdue)</span> }
+                            <div class="fw-bold" style="color:#0F172A;">@a.TieuDe</div>
+                            <small class="@(isPastDue ? "text-danger fw-bold" : "text-muted")">
+                                Hạn chót: @(a.HanNop?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Không có")
+                                @if (isPastDue) { <span>(Đã quá hạn)</span> }
                             </small>
                         </div>
-                        <a href="/Student/ViewAssignment/@a.Id" class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-upload me-1"></i>Submit
+                        <a href="/Student/ViewAssignment/@a.BaiTapId" class="btn-wb-primary py-1 px-3" style="font-size:0.85rem;background:#059669;border-color:#059669;">
+                            <i class="bi bi-upload me-1"></i> Nộp Bài
                         </a>
                     </li>
                 }
                 @if (!Model.Assignments.Any())
                 {
-                    <li class="list-group-item text-muted">No assignments yet.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có bài tập nào cần nộp.</li>
                 }
             </ul>
         </div>

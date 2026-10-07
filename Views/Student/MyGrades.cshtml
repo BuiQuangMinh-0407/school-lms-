@@ -1,39 +1,49 @@
-@model List<SchoolManagement.Models.AssignmentSubmission>
+@model List<SchoolManagement.Models.DBNew2026.BaiNop>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "My Grades";
+    ViewData["Title"] = "Bảng Điểm Của Tôi";
 }
 
-<h4 class="mb-4"><i class="bi bi-patch-check me-2"></i>My Grades</h4>
+<div class="d-flex align-items-center mb-4">
+    <a href="/Student/Index" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.4rem;color:#0F172A;"><i class="bi bi-patch-check-fill text-success me-2"></i>Bảng Điểm Của Tôi</h2>
+        <small class="text-muted">Tổng hợp điểm số và nhận xét từ giảng viên cho các bài tập đã làm</small>
+    </div>
+</div>
 
-<div class="card">
+<div class="wb-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
+        <table class="wb-table">
+            <thead>
                 <tr>
-                    <th>Class</th>
-                    <th>Assignment</th>
-                    <th>Grade</th>
-                    <th>Feedback</th>
-                    <th>Graded At</th>
+                    <th>Lớp Học</th>
+                    <th>Bài Tập</th>
+                    <th>Điểm Số</th>
+                    <th>Nhận Xét Của Giảng Viên</th>
+                    <th>Thời Điểm Nộp</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var sub in Model)
                 {
-                    var g = sub.Grade!.Value;
-                    var badgeClass = g >= 80 ? "bg-success" : g >= 60 ? "bg-warning text-dark" : "bg-danger";
+                    var g = sub.Diem ?? 0;
+                    var badgeClass = g >= 8.0m ? "success" : g >= 5.0m ? "warning" : "failed";
                     <tr>
-                        <td>@sub.Assignment.Class.Name</td>
-                        <td class="fw-semibold">@sub.Assignment.Title</td>
-                        <td><span class="badge @badgeClass fs-6">@g / 100</span></td>
-                        <td><small class="text-muted">@(sub.Feedback ?? "—")</small></td>
-                        <td><small>@sub.GradedAt?.ToLocalTime().ToString("dd/MM/yyyy")</small></td>
+                        <td class="fw-bold">@sub.BaiTap.LopHoc.TenLop</td>
+                        <td>@sub.BaiTap.TieuDe</td>
+                        <td>
+                            <span class="wb-badge @badgeClass" style="font-size:0.95rem;padding:4px 12px;">
+                                @g / 10
+                            </span>
+                        </td>
+                        <td><span class="text-muted">@(sub.NhanXet ?? "—")</span></td>
+                        <td><small class="text-muted">@sub.NgayNop.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
                     </tr>
                 }
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="5" class="text-center text-muted py-4">No grades yet.</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-4">Chưa có bài tập nào được chấm điểm.</td></tr>
                 }
             </tbody>
         </table>

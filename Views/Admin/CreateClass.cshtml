@@ -1,31 +1,59 @@
 @model SchoolManagement.ViewModels.CreateClassViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Create Class";
+    ViewData["Title"] = "Tạo Lớp Học Mới";
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Admin/Classes" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-    <h4 class="mb-0"><i class="bi bi-collection me-2"></i>Create New Class</h4>
+    <a href="/Admin/Classes" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.3rem;color:#0F172A;">Tạo Lớp Học Mới</h2>
+        <small class="text-muted">Nhập thông tin khóa học / học phần mới</small>
+    </div>
 </div>
 
-<div class="card p-4" style="max-width:560px">
+<div class="wb-card p-4" style="max-width:580px;">
     <form asp-action="CreateClass" method="post">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+        <div asp-validation-summary="All" class="alert alert-danger py-2" style="border-radius:10px;font-size:0.88rem;"></div>
 
         <div class="mb-3">
-            <label asp-for="Name" class="form-label fw-semibold">Class Name</label>
-            <input asp-for="Name" class="form-control" placeholder="e.g. Mathematics 10A" />
-            <span asp-validation-for="Name" class="text-danger small"></span>
-        </div>
-        <div class="mb-4">
-            <label asp-for="Description" class="form-label fw-semibold">Description <small class="text-muted">(optional)</small></label>
-            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <label asp-for="MaLop" class="form-label fw-bold small text-muted"></label>
+            <input asp-for="MaLop" class="form-control" placeholder="Ví dụ: BMTT01, CSDL01, WEB01" />
+            <span asp-validation-for="MaLop" class="text-danger small"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-plus-lg me-1"></i>Create Class
+        <div class="mb-3">
+            <label asp-for="TenLop" class="form-label fw-bold small text-muted"></label>
+            <input asp-for="TenLop" class="form-control" placeholder="Ví dụ: Bảo mật thông tin, Lập trình Web" />
+            <span asp-validation-for="TenLop" class="text-danger small"></span>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+                <label asp-for="NamHoc" class="form-label fw-bold small text-muted"></label>
+                <input asp-for="NamHoc" class="form-control" placeholder="2026-2027" />
+                <span asp-validation-for="NamHoc" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-6">
+                <label asp-for="HocKy" class="form-label fw-bold small text-muted"></label>
+                <select asp-for="HocKy" class="form-select">
+                    <option value="1">Học kỳ 1</option>
+                    <option value="2">Học kỳ 2</option>
+                    <option value="3">Học kỳ hè</option>
+                </select>
+                <span asp-validation-for="HocKy" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="SiSoToiDa" class="form-label fw-bold small text-muted"></label>
+            <input asp-for="SiSoToiDa" class="form-control" type="number" min="1" max="200" />
+            <span asp-validation-for="SiSoToiDa" class="text-danger small"></span>
+        </div>
+
+        <button type="submit" class="btn-wb-primary w-100 py-2">
+            <i class="bi bi-plus-circle-fill me-1"></i> Tạo Lớp Học
         </button>
     </form>
 </div>

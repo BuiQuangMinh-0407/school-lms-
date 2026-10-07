@@ -1,38 +1,46 @@
 @model SchoolManagement.ViewModels.CreateAssignmentViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Create Assignment";
+    ViewData["Title"] = "Tạo Bài Tập";
 }
 
 <div class="d-flex align-items-center mb-4">
-    <a href="/Teacher/ClassDetail/@Model.ClassId" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-    <h4 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>Create Assignment</h4>
+    <a href="/Teacher/ClassDetail/@Model.ClassId" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.3rem;color:#0F172A;">Tạo Bài Tập Mới</h2>
+        <small class="text-muted">Giao bài tập hoặc bài kiểm tra cho sinh viên trong lớp</small>
+    </div>
 </div>
 
-<div class="card p-4" style="max-width:640px">
+<div class="wb-card p-4" style="max-width:680px;">
     <form asp-action="CreateAssignment" method="post">
         @Html.AntiForgeryToken()
         <input asp-for="ClassId" type="hidden" />
-        <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+        <div asp-validation-summary="All" class="alert alert-danger py-2" style="border-radius:10px;font-size:0.88rem;"></div>
 
         <div class="mb-3">
-            <label asp-for="Title" class="form-label fw-semibold"></label>
-            <input asp-for="Title" class="form-control" />
+            <label asp-for="Title" class="form-label fw-bold small text-muted"></label>
+            <input asp-for="Title" class="form-control" placeholder="Ví dụ: Bài tập thực hành bảo mật mật khẩu" />
             <span asp-validation-for="Title" class="text-danger small"></span>
         </div>
+
         <div class="mb-3">
-            <label asp-for="Description" class="form-label fw-semibold">Instructions</label>
-            <textarea asp-for="Description" class="form-control" rows="6"></textarea>
+            <label asp-for="Description" class="form-label fw-bold small text-muted"></label>
+            <textarea asp-for="Description" class="form-control" rows="6" placeholder="Mô tả đề bài, yêu cầu và tiêu chí chấm điểm..."></textarea>
             <span asp-validation-for="Description" class="text-danger small"></span>
         </div>
+
         <div class="mb-4">
-            <label asp-for="DueDate" class="form-label fw-semibold"></label>
+            <label asp-for="DueDate" class="form-label fw-bold small text-muted"></label>
             <input asp-for="DueDate" class="form-control" type="datetime-local" />
             <span asp-validation-for="DueDate" class="text-danger small"></span>
         </div>
 
-        <button type="submit" class="btn btn-success w-100">
-            <i class="bi bi-check-lg me-1"></i>Create Assignment
-        </button>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-wb-primary py-2 px-4" style="background:#059669;border-color:#059669;">
+                <i class="bi bi-clipboard-check-fill me-1"></i> Tạo Bài Tập
+            </button>
+            <a href="/Teacher/ClassDetail/@Model.ClassId" class="btn-wb-outline py-2 px-3">Hủy</a>
+        </div>
     </form>
 </div>

@@ -1,45 +1,57 @@
 @model SchoolManagement.ViewModels.GradeSubmissionViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Grade Submission";
+    ViewData["Title"] = "Chấm Điểm Bài Nộp";
 }
 
 <div class="d-flex align-items-center mb-4">
-    <button onclick="history.back()" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></button>
-    <h4 class="mb-0"><i class="bi bi-patch-check me-2"></i>Grade Submission</h4>
+    <button onclick="history.back()" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</button>
+    <div>
+        <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:#0F172A;">Chấm Điểm Bài Nộp</h2>
+        <small class="text-muted">Đánh giá và đưa ra nhận xét cho bài làm của sinh viên</small>
+    </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-7">
-        <div class="card p-4">
-            <h6 class="fw-bold mb-1"><i class="bi bi-person me-2"></i>@Model.StudentName</h6>
-            <small class="text-muted d-block mb-3">Submitted @Model.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
-            <hr />
-            <h6 class="fw-semibold">Student's Answer:</h6>
-            <div class="bg-light p-3 rounded" style="white-space:pre-wrap">@Model.SubmissionContent</div>
+        <div class="wb-card p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:42px;height:42px;border-radius:50%;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-weight:700;">
+                    SV
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0" style="color:#0F172A;">@Model.StudentName</h5>
+                    <small class="text-muted">Mã sinh viên: <strong>@Model.StudentCode</strong> | Nộp lúc: @Model.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                </div>
+            </div>
+            <hr style="border-color:#F1F5F9;" />
+            <h6 class="fw-bold small text-muted mb-2">Nội dung bài làm của sinh viên:</h6>
+            <div class="p-3 rounded-3" style="background:#F8FAFC;border:1px solid #E2E8F0;white-space:pre-wrap;line-height:1.7;min-height:200px;">@Model.SubmissionContent</div>
         </div>
     </div>
 
     <div class="col-lg-5">
-        <div class="card p-4">
-            <h6 class="fw-semibold mb-3"><i class="bi bi-pencil-square me-2"></i>Give Grade</h6>
+        <div class="wb-card p-4">
+            <h5 class="fw-bold mb-3" style="color:#0F172A;"><i class="bi bi-pencil-square text-primary me-2"></i>Nhập Điểm & Đánh Giá</h5>
             <form asp-action="Grade" method="post">
                 @Html.AntiForgeryToken()
                 <input asp-for="SubmissionId" type="hidden" />
-                <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+                <div asp-validation-summary="All" class="alert alert-danger py-2" style="border-radius:10px;font-size:0.88rem;"></div>
 
                 <div class="mb-3">
-                    <label asp-for="Grade" class="form-label fw-semibold">Grade (0–100)</label>
-                    <input asp-for="Grade" class="form-control" type="number" min="0" max="100" />
+                    <label asp-for="Grade" class="form-label fw-bold small text-muted">Điểm Số (thang điểm 10)</label>
+                    <input asp-for="Grade" class="form-control" type="number" step="0.1" min="0" max="10" />
                     <span asp-validation-for="Grade" class="text-danger small"></span>
                 </div>
+
                 <div class="mb-4">
-                    <label asp-for="Feedback" class="form-label fw-semibold">Feedback <small class="text-muted">(optional)</small></label>
-                    <textarea asp-for="Feedback" class="form-control" rows="4" placeholder="Write feedback for the student..."></textarea>
+                    <label asp-for="Feedback" class="form-label fw-bold small text-muted">Nhận Xét Của Giảng Viên</label>
+                    <textarea asp-for="Feedback" class="form-control" rows="5" placeholder="Ghi nhận xét và góp ý cho sinh viên..."></textarea>
+                    <span asp-validation-for="Feedback" class="text-danger small"></span>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100">
-                    <i class="bi bi-check-lg me-1"></i>Submit Grade
+                <button type="submit" class="btn-wb-primary w-100 py-2">
+                    <i class="bi bi-check2-circle me-1"></i> Lưu Điểm & Nhận Xét
                 </button>
             </form>
         </div>

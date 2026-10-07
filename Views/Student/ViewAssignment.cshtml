@@ -1,19 +1,19 @@
 @model SchoolManagement.ViewModels.SubmitAssignmentViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Submit Assignment";
-    var existing = ViewBag.ExistingSubmission as SchoolManagement.Models.AssignmentSubmission;
+    ViewData["Title"] = "Nộp Bài Tập: " + Model.AssignmentTitle;
+    var existing = ViewBag.ExistingSubmission as SchoolManagement.Models.DBNew2026.BaiNop;
     bool alreadySubmitted = existing != null;
-    bool isPastDue = Model.DueDate < DateTime.UtcNow;
+    bool isPastDue = Model.DueDate.HasValue && Model.DueDate.Value < DateTime.UtcNow;
 }
 
 <div class="d-flex align-items-center mb-4">
-    <button onclick="history.back()" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></button>
+    <button onclick="history.back()" class="btn-wb-outline me-3"><i class="bi bi-arrow-left"></i> Quay lại</button>
     <div>
-        <h4 class="mb-0"><i class="bi bi-upload me-2"></i>@Model.AssignmentTitle</h4>
+        <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:#0F172A;"><i class="bi bi-upload text-success me-2"></i>@Model.AssignmentTitle</h2>
         <small class="@(isPastDue ? "text-danger fw-bold" : "text-muted")">
-            Due: @Model.DueDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-            @if (isPastDue) { <span>(OVERDUE)</span> }
+            Hạn nộp: @(Model.DueDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Không giới hạn")
+            @if (isPastDue) { <span>(ĐÃ QUÁ HẠN NỘP)</span> }
         </small>
     </div>
 </div>
@@ -21,29 +21,31 @@
 <div class="row g-4">
     <!-- Assignment instructions -->
     <div class="col-lg-5">
-        <div class="card p-4">
-            <h6 class="fw-semibold"><i class="bi bi-info-circle me-2"></i>Instructions</h6>
-            <div style="white-space:pre-wrap">@Model.AssignmentDescription</div>
+        <div class="wb-card p-4">
+            <h5 class="fw-bold mb-3" style="color:#0F172A;"><i class="bi bi-info-circle text-primary me-2"></i>Đề Bài & Yêu Cầu</h5>
+            <div style="white-space:pre-wrap;line-height:1.7;color:#334155;">@Model.AssignmentDescription</div>
         </div>
 
         @if (alreadySubmitted)
         {
-            <div class="card p-3 mt-3 border-success">
-                <h6 class="text-success fw-semibold"><i class="bi bi-check-circle me-2"></i>Already Submitted</h6>
-                <small class="text-muted d-block">Submitted @existing!.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
-                @if (existing.Grade.HasValue)
+            <div class="wb-card p-4 mt-3" style="border: 1.5px solid #10B981; background: #F0FDF4;">
+                <h6 class="text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Đã Nộp Bài</h6>
+                <small class="text-muted d-block">Thời điểm nộp: @existing!.NgayNop.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                @if (existing.Diem.HasValue)
                 {
-                    <div class="mt-2">
-                        <span class="badge bg-success fs-6">Grade: @existing.Grade / 100</span>
-                        @if (!string.IsNullOrEmpty(existing.Feedback))
+                    <div class="mt-3">
+                        <span class="wb-badge success" style="font-size:1rem;padding:6px 14px;">Điểm: @existing.Diem / 10</span>
+                        @if (!string.IsNullOrEmpty(existing.NhanXet))
                         {
-                            <p class="mt-2 text-muted small"><strong>Feedback:</strong> @existing.Feedback</p>
+                            <div class="mt-2 text-muted small p-2 rounded" style="background:#FFFFFF;border:1px solid #D1FAE5;">
+                                <strong>Nhận xét của giáo viên:</strong> @existing.NhanXet
+                            </div>
                         }
                     </div>
                 }
                 else
                 {
-                    <span class="badge bg-warning text-dark mt-2">Awaiting grade</span>
+                    <span class="wb-badge" style="background:#FEF3C7;color:#D97706;margin-top:8px;display:inline-block;">Đang chờ giảng viên chấm điểm</span>
                 }
             </div>
         }
@@ -51,10 +53,10 @@
 
     <!-- Submission form -->
     <div class="col-lg-7">
-        <div class="card p-4">
-            <h6 class="fw-semibold mb-3">
-                @(alreadySubmitted ? "Update Your Submission" : "Your Answer")
-            </h6>
+        <div class="wb-card p-4">
+            <h5 class="fw-bold mb-3" style="color:#0F172A;">
+                @(alreadySubmitted ? "Chỉnh Sửa & Nộp Lại Bài Làm" : "Nội Dung Bài Làm")
+            </h5>
             <form asp-action="SubmitAssignment" method="post">
                 @Html.AntiForgeryToken()
                 <input asp-for="AssignmentId" type="hidden" />
@@ -62,14 +64,16 @@
                 <input asp-for="AssignmentDescription" type="hidden" />
                 <input asp-for="DueDate" type="hidden" />
 
-                <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+                <div asp-validation-summary="All" class="alert alert-danger py-2" style="border-radius:10px;font-size:0.88rem;"></div>
 
-                <textarea asp-for="SubmissionContent" class="form-control" rows="12"
-                    placeholder="Type your answer here..."></textarea>
-                <span asp-validation-for="SubmissionContent" class="text-danger small"></span>
+                <div class="mb-3">
+                    <textarea asp-for="SubmissionContent" class="form-control" rows="12"
+                        placeholder="Nhập nội dung bài làm hoặc câu trả lời của bạn tại đây..."></textarea>
+                    <span asp-validation-for="SubmissionContent" class="text-danger small"></span>
+                </div>
 
-                <button type="submit" class="btn btn-success w-100 mt-3">
-                    <i class="bi bi-send me-1"></i>@(alreadySubmitted ? "Re-submit Answer" : "Submit Answer")
+                <button type="submit" class="btn-wb-primary w-100 py-2" style="background:#059669;border-color:#059669;">
+                    <i class="bi bi-send-fill me-1"></i>@(alreadySubmitted ? "Nộp Lại Bài Làm" : "Xác Nhận Nộp Bài")
                 </button>
             </form>
         </div>
